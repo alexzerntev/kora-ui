@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { TEAM, TYPE_COLORS } from '../data/team'
 import type { TeamMember, AgentMember } from '../data/team'
 import { Avatar } from '../components/Avatar'
@@ -131,6 +131,9 @@ export function Team() {
   return (
     <div style={{ maxWidth: 1100 }}>
       <header style={{ marginBottom: 36 }}>
+        <Link to="/" style={{ fontSize: 13, color: 'var(--color-ink-muted)', textDecoration: 'none', marginBottom: 12, display: 'inline-block' }}>
+          &larr; Dashboard
+        </Link>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.03em' }}>Team</h1>
         <p style={{ fontSize: 14, color: 'var(--color-ink-secondary)', marginTop: 4 }}>People and agents collaborating on workflows</p>
       </header>

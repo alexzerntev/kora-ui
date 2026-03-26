@@ -1,18 +1,18 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
 @theme {
-  --color-bg: #f5f5f4;
+  --color-bg: #ffffff;
   --color-bg-surface: #ffffff;
   --color-bg-card: #e8eae8;
-  --color-bg-hover: #f5f5f5;
-  --color-border: #e5e5e3;
-  --color-border-light: #eeeeec;
-  --color-ink: #1a1a1a;
-  --color-ink-secondary: #6b6b6b;
+  --color-bg-hover: #f9f9f8;
+  --color-border: #e5e5e5;
+  --color-border-light: #efefef;
+  --color-ink: #0d0d0d;
+  --color-ink-secondary: #666666;
   --color-ink-muted: #a0a0a0;
-  --color-accent: #2563eb;
-  --color-accent-light: #eff6ff;
+  --color-accent: #0d0d0d;
+  --color-accent-light: #f5f5f5;
   --color-status-waiting: #d4d4d4;
   --color-status-processing: #f59e0b;
   --color-status-done: #22c55e;
@@ -22,7 +22,7 @@
   --color-agent: #0891b2;
   --color-agent-light: #ecfeff;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 }
 
 *,
@@ -35,7 +35,7 @@
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-bg);
+  background: #fff;
   color: var(--color-ink);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -45,6 +45,12 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #bbb; }
 
 /* Sidenav links */
 .sidenav-link {
@@ -76,7 +82,6 @@ body {
   50% { opacity: 0.35; }
 }
 
-/* Workflow node animations */
 @keyframes ring-pulse {
   0%, 100% { opacity: 0.4; transform: scale(1); }
   50% { opacity: 0; transform: scale(1.08); }
