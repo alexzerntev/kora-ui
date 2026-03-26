@@ -1,131 +1,152 @@
 import { Handle, Position } from '@xyflow/react'
 import { Avatar } from './Avatar'
-import { HiUser } from 'react-icons/hi2'
+import { HiUser, HiCheck } from 'react-icons/hi2'
 import { RiRobot2Fill } from 'react-icons/ri'
-import { HiDocumentText } from 'react-icons/hi2'
+import {
+  HiOutlineMagnifyingGlass,
+  HiOutlineDocumentText,
+  HiOutlineClipboardDocumentCheck,
+  HiOutlineHandThumbUp,
+  HiOutlineChartBar,
+} from 'react-icons/hi2'
+import { TASKS } from '../data/tasks'
+import { TEAM, TYPE_COLORS } from '../data/team'
+
+const TASK_ICONS: Record<string, React.ReactNode> = {
+  t1: <HiOutlineMagnifyingGlass size={20} />,
+  t2: <HiOutlineDocumentText size={20} />,
+  t3: <HiOutlineClipboardDocumentCheck size={20} />,
+  t4: <HiOutlineHandThumbUp size={20} />,
+  t5: <HiOutlineChartBar size={20} />,
+}
 
 interface DeskNodeData {
+  taskId: string
   taskName: string
+  assigneeId: string
   assigneeName: string
   assigneeSeed: string
   assigneeType: 'human' | 'agent'
   status: 'idle' | 'running' | 'done'
 }
 
-const STATUS_CONFIG = {
-  idle: { label: 'Waiting', bg: '#f5f5f5', border: '#e5e5e5', dot: '#d4d4d4' },
-  running: { label: 'Working', bg: '#fffbeb', border: '#fde68a', dot: '#f59e0b' },
-  done: { label: 'Done', bg: '#ecfdf5', border: '#a7f3d0', dot: '#22c55e' },
-}
-
 export function DeskNode({ data }: { data: DeskNodeData }) {
-  const status = STATUS_CONFIG[data.status]
+  const isRunning = data.status === 'running'
+  const isDone = data.status === 'done'
+
+  const taskData = TASKS.find((t) => t.id === data.taskId)
+  const memberData = TEAM.find((m) => m.id === data.assigneeId)
   const isHuman = data.assigneeType === 'human'
+  const { light: colorLight } = TYPE_COLORS[data.assigneeType]
 
   return (
     <div style={{ position: 'relative' }}>
-      <Handle type="target" position={Position.Top} style={{ background: '#c4c4c4', border: 'none', width: 8, height: 8 }} />
+      <Handle type="target" position={Position.Left} style={{ background: 'transparent', border: 'none', width: 1, height: 1 }} />
 
-      {/* Desk surface */}
-      <div
-        style={{
-          width: 200,
-          background: '#fff',
-          borderRadius: 16,
-          border: `2px solid ${status.border}`,
+      <div style={{ width: 220, position: 'relative' }}>
+
+        {/* Running glow — only when actively running */}
+        {isRunning && (
+          <div style={{
+            position: 'absolute', inset: -8, borderRadius: 30,
+            border: '2px solid rgba(37,99,235,0.1)',
+            animation: 'ring-pulse 2.5s ease-in-out infinite',
+            pointerEvents: 'none',
+          }} />
+        )}
+
+        <div style={{
+          background: 'var(--color-bg-surface)',
+          borderRadius: 24,
           overflow: 'hidden',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.06)',
-        }}
-      >
-        {/* Agent sitting at desk */}
-        <div
-          style={{
-            background: '#f8f8f8',
-            padding: '16px 16px 12px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 8,
-            borderBottom: '1px solid #efefef',
-          }}
-        >
-          {/* Avatar */}
-          <div style={{ position: 'relative' }}>
-            <Avatar seed={data.assigneeSeed} size={56} />
-            {/* Type badge */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -2,
-                right: -2,
-                width: 18,
-                height: 18,
-                borderRadius: '50%',
-                background: isHuman ? 'var(--color-human)' : 'var(--color-agent)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: 10,
-                border: '2px solid #fff',
-              }}
-            >
-              {isHuman ? <HiUser size={9} /> : <RiRobot2Fill size={9} />}
-            </div>
-          </div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink)' }}>
-            {data.assigneeName}
-          </span>
-        </div>
+          border: `1.5px solid ${isRunning ? 'rgba(37,99,235,0.25)' : 'var(--color-border-light)'}`,
+          boxShadow: isRunning
+            ? '0 0 0 4px rgba(37,99,235,0.04), 0 4px 16px rgba(0,0,0,0.06)'
+            : '0 2px 8px rgba(0,0,0,0.04)',
+          opacity: isDone ? 0.5 : 1,
+        }}>
 
-        {/* Task dossier on the desk */}
-        <div style={{ padding: 12 }}>
-          <div
-            style={{
-              background: '#faf8f4',
-              border: '1px solid #e8e4dc',
-              borderRadius: 8,
-              padding: '8px 10px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 7,
-            }}
-          >
-            <HiDocumentText size={14} style={{ color: '#c4b99a', flexShrink: 0 }} />
-            <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-ink)' }}>
-              {data.taskName}
-            </span>
-          </div>
-        </div>
-
-        {/* Status bar */}
-        <div
-          style={{
-            background: status.bg,
-            padding: '6px 12px',
+          {/* Operator: avatar area */}
+          <div style={{
+            background: colorLight,
+            borderRadius: 20,
+            margin: 8,
+            height: 120,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 6,
-          }}
-        >
-          <span
-            style={{
-              width: 6,
-              height: 6,
-              borderRadius: '50%',
-              background: status.dot,
-              display: 'inline-block',
-              animation: data.status === 'running' ? 'pulse 2s infinite' : undefined,
-            }}
-          />
-          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--color-ink-secondary)' }}>
-            {status.label}
-          </span>
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              animation: isRunning ? 'worker-bob 2.5s ease-in-out infinite' : undefined,
+            }}>
+              <Avatar seed={data.assigneeSeed} size={80} />
+            </div>
+          </div>
+
+          {/* Operator info */}
+          <div style={{ padding: '12px 20px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-ink)' }}>
+                {data.assigneeName}
+              </h3>
+              <span style={{
+                width: 22, height: 22, borderRadius: '50%',
+                background: isHuman ? 'var(--color-human)' : 'var(--color-agent)',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0, color: '#fff', fontSize: 12,
+              }}>
+                {isHuman ? <HiUser /> : <RiRobot2Fill />}
+              </span>
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>
+              {memberData?.role ?? ''}
+            </p>
+
+          </div>
+
+          {/* Divider */}
+          <div style={{ height: 1, background: 'var(--color-border-light)', margin: '14px 20px' }} />
+
+          {/* Task section */}
+          <div style={{ padding: '0 20px 16px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: 8,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ color: 'var(--color-border)' }}>
+                  {TASK_ICONS[data.taskId] ?? <HiOutlineDocumentText size={20} />}
+                </div>
+                <h4 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink)' }}>
+                  {data.taskName}
+                </h4>
+              </div>
+              <div style={{ flexShrink: 0 }}>
+                {isRunning && (
+                  <div style={{
+                    width: 16, height: 16, borderRadius: '50%',
+                    border: '2px solid #dbeafe',
+                    borderTopColor: '#2563eb',
+                    animation: 'spin 0.8s linear infinite',
+                  }} />
+                )}
+                {isDone && <HiCheck size={14} style={{ color: '#22c55e' }} />}
+              </div>
+            </div>
+
+            <p style={{ fontSize: 12, color: 'var(--color-ink-secondary)', lineHeight: 1.5, marginBottom: 12 }}>
+              {taskData?.description ?? ''}
+            </p>
+
+          </div>
+
         </div>
       </div>
 
-      <Handle type="source" position={Position.Bottom} style={{ background: '#c4c4c4', border: 'none', width: 8, height: 8 }} />
+      <Handle type="source" position={Position.Right} style={{ background: 'transparent', border: 'none', width: 1, height: 1 }} />
     </div>
   )
 }

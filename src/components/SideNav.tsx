@@ -14,7 +14,7 @@ export function SideNav() {
       style={{
         width: 240,
         minHeight: '100vh',
-        background: 'var(--color-bg)',
+        background: '#eeedeb',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,

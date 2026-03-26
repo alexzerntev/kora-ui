@@ -13,6 +13,7 @@ export interface Workflow {
   id: string
   name: string
   description: string
+  lastRunAt?: string
   tasks: WorkflowTask[]
   edges: { from: string; to: string }[]
 }
@@ -22,10 +23,11 @@ export const WORKFLOWS: Workflow[] = [
     id: 'w1',
     name: 'Quarterly Report',
     description: 'End-to-end quarterly report generation pipeline',
+    lastRunAt: '2026-03-24T14:32:00Z',
     tasks: [
-      { id: 'n1', taskId: 't1', taskName: 'Research Topic', assigneeId: '3', assigneeName: 'Nora', assigneeSeed: 'Nora sr', assigneeType: 'agent', status: 'done' },
-      { id: 'n2', taskId: 't5', taskName: 'Data Analysis', assigneeId: '2', assigneeName: 'Bob', assigneeSeed: 'Bob Martinez lead', assigneeType: 'human', status: 'done' },
-      { id: 'n3', taskId: 't2', taskName: 'Draft Report', assigneeId: '4', assigneeName: 'Felix', assigneeSeed: 'Felix dir', assigneeType: 'agent', status: 'running' },
+      { id: 'n1', taskId: 't1', taskName: 'Research Topic', assigneeId: '3', assigneeName: 'Nora', assigneeSeed: 'Nora sr', assigneeType: 'agent', status: 'idle' },
+      { id: 'n2', taskId: 't5', taskName: 'Data Analysis', assigneeId: '2', assigneeName: 'Bob', assigneeSeed: 'Bob Martinez lead', assigneeType: 'human', status: 'idle' },
+      { id: 'n3', taskId: 't2', taskName: 'Draft Report', assigneeId: '4', assigneeName: 'Felix', assigneeSeed: 'Felix dir', assigneeType: 'agent', status: 'idle' },
       { id: 'n4', taskId: 't3', taskName: 'Review Document', assigneeId: '5', assigneeName: 'Mira', assigneeSeed: 'Mira head', assigneeType: 'agent', status: 'idle' },
       { id: 'n5', taskId: 't4', taskName: 'Stakeholder Approval', assigneeId: '1', assigneeName: 'Alice', assigneeSeed: 'Alice Chen work', assigneeType: 'human', status: 'idle' },
     ],
@@ -43,11 +45,13 @@ export const WORKFLOWS: Workflow[] = [
     tasks: [
       { id: 'n10', taskId: 't1', taskName: 'Research Topic', assigneeId: '3', assigneeName: 'Nora', assigneeSeed: 'Nora sr', assigneeType: 'agent', status: 'done' },
       { id: 'n11', taskId: 't2', taskName: 'Draft Report', assigneeId: '4', assigneeName: 'Felix', assigneeSeed: 'Felix dir', assigneeType: 'agent', status: 'done' },
-      { id: 'n12', taskId: 't3', taskName: 'Review Document', assigneeId: '5', assigneeName: 'Mira', assigneeSeed: 'Mira head', assigneeType: 'agent', status: 'done' },
+      { id: 'n12', taskId: 't3', taskName: 'Review Document', assigneeId: '5', assigneeName: 'Mira', assigneeSeed: 'Mira head', assigneeType: 'agent', status: 'running' },
+      { id: 'n13', taskId: 't4', taskName: 'Stakeholder Approval', assigneeId: '1', assigneeName: 'Alice', assigneeSeed: 'Alice Chen work', assigneeType: 'human', status: 'idle' },
     ],
     edges: [
       { from: 'n10', to: 'n11' },
       { from: 'n11', to: 'n12' },
+      { from: 'n12', to: 'n13' },
     ],
   },
 ]
