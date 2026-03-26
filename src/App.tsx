@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from './components/Layout'
-import { Dashboard } from './pages/Dashboard'
+import { Chat } from './components/Chat'
 import { Team } from './pages/Team'
 import { MemberDetail } from './pages/MemberDetail'
 import { Tasks } from './pages/Tasks'
@@ -12,13 +12,15 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/" element={<Navigate to="/chat" replace />} />
+          <Route path="/chat" element={<Chat />} />
+          <Route path="/chat/:id" element={<Chat />} />
           <Route path="/team" element={<Team />} />
           <Route path="/team/:id" element={<MemberDetail />} />
           <Route path="/tasks" element={<Tasks />} />
           <Route path="/workflows" element={<Workflows />} />
           <Route path="/workflows/:id" element={<WorkflowDetail />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/chat" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>

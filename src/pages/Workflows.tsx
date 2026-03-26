@@ -1,4 +1,4 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { WORKFLOWS } from '../data/workflows'
 import type { Workflow } from '../data/workflows'
 import { TbArrowsShuffle } from 'react-icons/tb'
@@ -113,9 +113,6 @@ export function Workflows() {
   return (
     <div style={{ maxWidth: 1100 }}>
       <header style={{ marginBottom: 36 }}>
-        <Link to="/" style={{ fontSize: 13, color: 'var(--color-ink-muted)', textDecoration: 'none', marginBottom: 12, display: 'inline-block' }}>
-          &larr; Dashboard
-        </Link>
         <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.03em' }}>Workflows</h1>
         <p style={{ fontSize: 14, color: 'var(--color-ink-secondary)', marginTop: 4 }}>Chains of tasks executed by your team</p>
       </header>
