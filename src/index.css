@@ -1,0 +1,77 @@
+@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@theme {
+  --color-bg: #f0f0f0;
+  --color-bg-surface: #ffffff;
+  --color-bg-card: #e8eae8;
+  --color-bg-hover: #f5f5f5;
+  --color-border: #e0e0e0;
+  --color-border-light: #ebebeb;
+  --color-ink: #1a1a1a;
+  --color-ink-secondary: #6b6b6b;
+  --color-ink-muted: #a0a0a0;
+  --color-accent: #2563eb;
+  --color-accent-light: #eff6ff;
+  --color-status-waiting: #d4d4d4;
+  --color-status-processing: #f59e0b;
+  --color-status-done: #22c55e;
+  --color-status-failed: #ef4444;
+  --color-human: #6d28d9;
+  --color-human-light: #f3f0ff;
+  --color-agent: #0891b2;
+  --color-agent-light: #ecfeff;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--color-bg);
+  color: var(--color-ink);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Sidenav links */
+.sidenav-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-ink-secondary);
+  border-radius: 12px;
+  transition: all 0.15s ease;
+}
+
+.sidenav-link:hover {
+  background: var(--color-bg-hover);
+  color: var(--color-ink);
+}
+
+.sidenav-active {
+  background: var(--color-bg-surface);
+  color: var(--color-ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
