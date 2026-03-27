@@ -59,10 +59,10 @@ export function DeskNode({ data }: { data: DeskNodeData }) {
           background: 'var(--color-bg-surface)',
           borderRadius: 24,
           overflow: 'hidden',
-          border: `1.5px solid ${isRunning ? 'rgba(37,99,235,0.25)' : 'var(--color-border-light)'}`,
+          border: `1.5px solid ${isRunning ? 'rgba(37,99,235,0.25)' : 'var(--color-border)'}`,
           boxShadow: isRunning
-            ? '0 0 0 4px rgba(37,99,235,0.04), 0 4px 16px rgba(0,0,0,0.06)'
-            : '0 2px 8px rgba(0,0,0,0.04)',
+            ? '0 0 0 4px rgba(37,99,235,0.04), 0 4px 16px rgba(0,0,0,0.08)'
+            : '0 2px 12px rgba(0,0,0,0.08)',
           opacity: isDone ? 0.5 : 1,
         }}>
 

@@ -3,17 +3,18 @@ import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { HiUsers } from 'react-icons/hi2'
 import {
   TbLayoutList,
-  TbArrowsShuffle,
+  TbRoute,
   TbMessage,
   TbPlus,
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
+  TbSettings,
 } from 'react-icons/tb'
 
 const WORKSPACE_NAV = [
+  { to: '/processes', icon: <TbRoute size={18} />, label: 'Processes' },
   { to: '/team', icon: <HiUsers size={18} />, label: 'Team' },
   { to: '/tasks', icon: <TbLayoutList size={18} />, label: 'Tasks' },
-  { to: '/workflows', icon: <TbArrowsShuffle size={18} />, label: 'Workflows' },
 ]
 
 const RECENT_CHATS = [
@@ -30,6 +31,8 @@ export function Layout() {
   const navigate = useNavigate()
 
   const isChat = location.pathname === '/chat' || location.pathname.startsWith('/chat/')
+  const isWorkflowDetail = /^\/processes\/\w+/.test(location.pathname)
+  const isFullBleed = isChat || isWorkflowDetail
   const sidebarWidth = collapsed ? 56 : 252
 
   return (
@@ -189,6 +192,30 @@ export function Layout() {
             })}
           </div>
         </div>
+
+        {/* ── Settings button ── */}
+        <div
+          style={{
+            padding: collapsed ? '8px 8px' : '8px 10px',
+            flexShrink: 0,
+            borderTop: '1px solid var(--sidebar-border)',
+          }}
+        >
+          <NavLink
+            to="/settings"
+            className={`sidebar-nav-item ${location.pathname.startsWith('/settings') ? 'active' : ''}`}
+            style={{
+              justifyContent: collapsed ? 'center' : 'flex-start',
+              padding: collapsed ? '8px 0' : '7px 10px',
+            }}
+            title={collapsed ? 'Settings' : undefined}
+          >
+            <span style={{ flexShrink: 0, display: 'flex' }}>
+              <TbSettings size={18} />
+            </span>
+            {!collapsed && <span>Settings</span>}
+          </NavLink>
+        </div>
       </aside>
 
       {/* ── Main content ── */}
@@ -201,11 +228,11 @@ export function Layout() {
           minWidth: 0,
         }}
       >
-        {isChat ? (
+        {isFullBleed ? (
           <Outlet />
         ) : (
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            <div style={{ padding: '28px 36px', maxWidth: 1200 }}>
+            <div style={{ padding: '28px 36px', maxWidth: 1200, margin: '0 auto' }}>
               <Outlet />
             </div>
           </div>

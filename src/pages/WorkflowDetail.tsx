@@ -6,15 +6,16 @@ import {
   Controls,
   type Node,
   type Edge,
-  MarkerType,
   ConnectionLineType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { DeskNode } from '../components/DeskNode'
+import { WorkflowEdge } from '../components/WorkflowEdge'
 import { WORKFLOWS } from '../data/workflows'
 import { TbArrowLeft } from 'react-icons/tb'
 
 const nodeTypes = { desk: DeskNode }
+const edgeTypes = { workflow: WorkflowEdge }
 
 export function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
@@ -24,16 +25,14 @@ export function WorkflowDetail() {
   const nodes: Node[] = useMemo(() => {
     if (!workflow) return []
 
-    // Left-to-right layout: x = layer (column), y = position within layer (row)
     const nodeWidth = 240
-    const nodeHeight = 420
-    const colGap = 180   // horizontal gap between columns
-    const rowGap = 60    // vertical gap between parallel nodes
+    const nodeHeight = 330
+    const colGap = 220
+    const rowGap = 60
 
     const hasIncoming = new Set(workflow.edges.map((e) => e.to))
     const roots = workflow.tasks.filter((t) => !hasIncoming.has(t.id))
 
-    // Assign each node to a layer (column) via BFS
     const layerMap: Record<string, number> = {}
     roots.forEach((t) => { layerMap[t.id] = 0 })
 
@@ -47,7 +46,6 @@ export function WorkflowDetail() {
           const parents = workflow.edges.filter((e) => e.to === edge.to).map((e) => e.from)
           const allParentsPlaced = parents.every((p) => placed.has(p))
           if (allParentsPlaced && !nextLayer.includes(edge.to)) {
-            // Layer = max parent layer + 1
             const maxParentLayer = Math.max(...parents.map((p) => layerMap[p]))
             layerMap[edge.to] = maxParentLayer + 1
             nextLayer.push(edge.to)
@@ -58,14 +56,12 @@ export function WorkflowDetail() {
       currentLayer = nextLayer
     }
 
-    // Group nodes by layer
     const layers: Record<number, string[]> = {}
     for (const [nodeId, layer] of Object.entries(layerMap)) {
       if (!layers[layer]) layers[layer] = []
       layers[layer].push(nodeId)
     }
 
-    // Position: x from layer index, y centered within layer
     const positions: Record<string, { x: number; y: number }> = {}
     for (const [layerStr, nodeIds] of Object.entries(layers)) {
       const layer = Number(layerStr)
@@ -109,33 +105,20 @@ export function WorkflowDetail() {
       const isActive = hasRunning && sourceStatus === 'done' && targetStatus === 'running'
       const isDone = hasRunning && sourceStatus === 'done' && (targetStatus === 'done' || targetStatus === 'running')
 
+      const state = isActive ? 'active' : isDone ? 'done' : 'idle'
+
       return {
         id: `e-${i}`,
         source: e.from,
         target: e.to,
-        type: 'smoothstep',
-        animated: isActive,
-        style: {
-          stroke: isDone ? '#86efac' : isActive ? '#93c5fd' : '#d4d4d4',
-          strokeWidth: 2,
-          strokeLinecap: 'round' as const,
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          color: isDone ? '#86efac' : isActive ? '#93c5fd' : '#d4d4d4',
-          width: 12,
-          height: 12,
-        },
+        type: 'workflow',
+        data: { state },
       }
     })
   }, [workflow])
 
   if (!workflow) {
-    return (
-      <div style={{ padding: '32px 40px' }}>
-        <p>Workflow not found.</p>
-      </div>
-    )
+    return <p style={{ padding: 32, color: 'var(--color-ink-secondary)' }}>Workflow not found.</p>
   }
 
   const doneCount = workflow.tasks.filter((t) => t.status === 'done').length
@@ -144,11 +127,11 @@ export function WorkflowDetail() {
 
   return (
     <div style={{
-      position: 'relative',
-      margin: '-32px -40px',
-      height: 'calc(100vh - 32px)',
       display: 'flex',
       flexDirection: 'column',
+      flex: 1,
+      minHeight: 0,
+      position: 'relative',
     }}>
       {/* Floating header */}
       <div style={{
@@ -160,7 +143,7 @@ export function WorkflowDetail() {
         display: 'flex',
         alignItems: 'center',
         gap: 16,
-        background: 'rgba(255,255,255,0.85)',
+        background: 'rgba(255,255,255,0.88)',
         backdropFilter: 'blur(12px)',
         borderRadius: 14,
         padding: '12px 20px',
@@ -168,13 +151,9 @@ export function WorkflowDetail() {
         border: '1px solid var(--color-border-light)',
       }}>
         <button
-          onClick={() => navigate('/workflows')}
-          style={{
-            background: 'none', border: 'none', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: 8,
-            color: 'var(--color-ink-secondary)',
-          }}
+          onClick={() => navigate('/processes')}
+          className="back-btn"
+          style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
         >
           <TbArrowLeft size={18} />
         </button>
@@ -212,24 +191,25 @@ export function WorkflowDetail() {
       </div>
 
       {/* Full-bleed canvas */}
-      <div style={{ flex: 1, borderRadius: 20, overflow: 'hidden', background: '#fafaf9' }}>
+      <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
         <ReactFlow
           nodes={nodes}
           edges={edges}
           nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
           fitView
           fitViewOptions={{ padding: 0.4 }}
-          connectionLineType={ConnectionLineType.SmoothStep}
+          connectionLineType={ConnectionLineType.Bezier}
           proOptions={{ hideAttribution: true }}
           nodesDraggable
           nodesConnectable={false}
           elementsSelectable
         >
-          <Background gap={32} size={1} color="#f0efee" />
+          <Background gap={32} size={1} color="#e8e8e8" />
           <Controls
             showInteractive={false}
             position="bottom-right"
-            style={{ borderRadius: 12, border: '1px solid #e5e5e5', overflow: 'hidden', background: '#fff' }}
+            style={{ borderRadius: 12, border: '1px solid var(--color-border-light)', overflow: 'hidden', background: '#fff' }}
           />
         </ReactFlow>
       </div>

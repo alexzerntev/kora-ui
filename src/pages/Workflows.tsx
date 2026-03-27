@@ -20,23 +20,9 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
 
   return (
     <div
-      onClick={() => navigate(`/workflows/${workflow.id}`)}
-      style={{
-        background: 'var(--color-bg-surface)',
-        borderRadius: 20,
-        border: '1px solid var(--color-border-light)',
-        padding: 24,
-        cursor: 'pointer',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
-        e.currentTarget.style.transform = 'translateY(-4px)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none'
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
+      onClick={() => navigate(`/processes/${workflow.id}`)}
+      className="content-card"
+      style={{ padding: 24 }}
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -63,7 +49,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
             </span>
           )}
         </div>
-        <div style={{ height: 4, background: 'var(--color-bg)', borderRadius: 2, overflow: 'hidden' }}>
+        <div style={{ height: 4, background: 'var(--color-bg-hover)', borderRadius: 2, overflow: 'hidden' }}>
           <div style={{
             height: '100%',
             width: `${(doneCount / totalCount) * 100}%`,
@@ -100,7 +86,7 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
 
         <span style={{
           fontSize: 12, fontWeight: 600, color: 'var(--color-ink-muted)',
-          background: 'var(--color-bg)', padding: '4px 12px', borderRadius: 20,
+          background: 'var(--color-bg-hover)', padding: '4px 12px', borderRadius: 20,
         }}>
           {totalCount} tasks
         </span>
@@ -112,9 +98,9 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
 export function Workflows() {
   return (
     <div style={{ maxWidth: 1100 }}>
-      <header style={{ marginBottom: 36 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.03em' }}>Workflows</h1>
-        <p style={{ fontSize: 14, color: 'var(--color-ink-secondary)', marginTop: 4 }}>Chains of tasks executed by your team</p>
+      <header className="page-header">
+        <h1>Processes</h1>
+        <p>Orchestrated flows of work across your team</p>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>

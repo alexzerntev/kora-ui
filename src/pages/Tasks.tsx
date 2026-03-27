@@ -24,31 +24,14 @@ function TaskCard({ task }: { task: Task }) {
 
   return (
     <div
-      onClick={() => {}}
-      style={{
-        background: 'var(--color-bg-surface)',
-        borderRadius: 24,
-        overflow: 'hidden',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        border: '1px solid var(--color-border-light)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
-        e.currentTarget.style.transform = 'translateY(-6px)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none'
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
+      className="content-card"
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
     >
-      {/* Tinted icon area — gives visual weight like Team's avatar zone */}
+      {/* Tinted icon area */}
       <div
         style={{
           background: theme.bg,
-          borderRadius: 20,
+          borderRadius: 16,
           margin: 8,
           height: 100,
           display: 'flex',
@@ -94,7 +77,7 @@ function TaskCard({ task }: { task: Task }) {
           {task.description}
         </p>
 
-        {/* Refs — same pattern as Team capabilities */}
+        {/* Refs */}
         {task.refs.length > 0 && (
           <div style={{
             display: 'flex',
@@ -129,9 +112,9 @@ function TaskCard({ task }: { task: Task }) {
 export function Tasks() {
   return (
     <div style={{ maxWidth: 1100 }}>
-      <header style={{ marginBottom: 36 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.03em' }}>Tasks</h1>
-        <p style={{ fontSize: 14, color: 'var(--color-ink-secondary)', marginTop: 4 }}>Reusable units of work — pick a task, assign it to a workflow</p>
+      <header className="page-header">
+        <h1>Tasks</h1>
+        <p>Reusable units of work — pick a task, assign it to a workflow</p>
       </header>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
@@ -141,7 +124,7 @@ export function Tasks() {
         </div>
         <span style={{
           fontSize: 12, fontWeight: 600, color: 'var(--color-ink-muted)',
-          background: 'var(--color-bg)', padding: '3px 10px', borderRadius: 20,
+          background: 'var(--color-bg-hover)', padding: '3px 10px', borderRadius: 20,
         }}>
           {TASKS.length}
         </span>

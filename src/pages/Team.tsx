@@ -14,51 +14,58 @@ function MemberCard({ member }: { member: TeamMember | AgentMember }) {
   return (
     <div
       onClick={() => navigate(`/team/${member.id}`)}
-      style={{
-        background: 'var(--color-bg-surface)',
-        borderRadius: 24,
-        overflow: 'hidden',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: 'pointer',
-        display: 'flex',
-        flexDirection: 'column',
-        border: '1px solid var(--color-border-light)',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.boxShadow = '0 12px 40px rgba(0,0,0,0.08)'
-        e.currentTarget.style.transform = 'translateY(-6px)'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.boxShadow = 'none'
-        e.currentTarget.style.transform = 'translateY(0)'
-      }}
+      className="content-card"
+      style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}
     >
-      {/* Avatar area */}
+      {/* Avatar area — colored background block on top */}
       <div
         style={{
           background: colorLight,
-          borderRadius: 20,
-          margin: 8,
-          height: 220,
+          borderRadius: 16,
+          margin: 6,
+          height: 170,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
         }}
       >
-        <Avatar seed={member.avatarSeed} size={150} />
+        {isHuman ? (
+          <span
+            style={{
+              width: 72,
+              height: 72,
+              borderRadius: 18,
+              background: 'rgba(255,255,255,0.7)',
+              border: `1.5px solid ${TYPE_COLORS.human.dark}20`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 26,
+              fontWeight: 700,
+              color: TYPE_COLORS.human.dark,
+              letterSpacing: '-0.02em',
+              userSelect: 'none',
+            }}
+          >
+            {member.name.split(' ').map((n) => n[0]).join('')}
+          </span>
+        ) : (
+          <Avatar seed={member.avatarSeed} size={120} />
+        )}
       </div>
 
       {/* Info */}
-      <div style={{ padding: '16px 20px 20px' }}>
+      <div style={{ padding: '12px 16px 16px' }}>
         {/* Name + type badge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-ink)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink)' }}>
             {member.name}
           </h3>
           <span
             style={{
-              width: 22, height: 22,
+              width: 20,
+              height: 20,
               borderRadius: '50%',
               background: isHuman ? 'var(--color-human)' : 'var(--color-agent)',
               display: 'inline-flex',
@@ -66,14 +73,14 @@ function MemberCard({ member }: { member: TeamMember | AgentMember }) {
               justifyContent: 'center',
               flexShrink: 0,
               color: '#fff',
-              fontSize: 12,
+              fontSize: 11,
             }}
           >
             {isHuman ? <HiUser /> : <RiRobot2Fill />}
           </span>
         </div>
 
-        <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5, marginBottom: 16 }}>
+        <p style={{ fontSize: 12, color: 'var(--color-ink-secondary)', lineHeight: 1.5, marginBottom: 14 }}>
           {member.role}
         </p>
 
@@ -82,10 +89,10 @@ function MemberCard({ member }: { member: TeamMember | AgentMember }) {
           display: 'flex',
           gap: 6,
           flexWrap: 'wrap',
-          paddingTop: 14,
+          paddingTop: 12,
           borderTop: '1px solid var(--color-border-light)',
         }}>
-          {member.capabilities.slice(0, 2).map((cap) => (
+          {member.capabilities.slice(0, 3).map((cap) => (
             <span
               key={cap}
               style={{
@@ -97,7 +104,7 @@ function MemberCard({ member }: { member: TeamMember | AgentMember }) {
                 gap: 4,
               }}
             >
-              <TbCircleFilled size={6} style={{ opacity: 0.3 }} />
+              <TbCircleFilled size={5} style={{ opacity: 0.3 }} />
               {cap}
             </span>
           ))}
@@ -116,7 +123,7 @@ function SectionHeader({ title, count, icon }: { title: string; count: number; i
       </div>
       <span style={{
         fontSize: 12, fontWeight: 600, color: 'var(--color-ink-muted)',
-        background: 'var(--color-bg)', padding: '3px 10px', borderRadius: 20,
+        background: 'var(--color-bg-hover)', padding: '3px 10px', borderRadius: 20,
       }}>
         {count}
       </span>
@@ -125,27 +132,43 @@ function SectionHeader({ title, count, icon }: { title: string; count: number; i
 }
 
 export function Team() {
-  const humans = TEAM.filter((m) => m.type === 'human')
+  const people = TEAM.filter((m) => m.type === 'human')
   const agents = TEAM.filter((m) => m.type === 'agent')
 
   return (
     <div style={{ maxWidth: 1100 }}>
-      <header style={{ marginBottom: 36 }}>
-        <h1 style={{ fontSize: 26, fontWeight: 700, color: 'var(--color-ink)', letterSpacing: '-0.03em' }}>Team</h1>
-        <p style={{ fontSize: 14, color: 'var(--color-ink-secondary)', marginTop: 4 }}>People and agents collaborating on workflows</p>
+      <header className="page-header">
+        <h1>Team</h1>
+        <p>People and agents collaborating on workflows</p>
       </header>
 
-      <section style={{ marginBottom: 40 }}>
-        <SectionHeader title="People" count={humans.length} icon={<HiUsers size={16} />} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-          {humans.map((m) => <MemberCard key={m.id} member={m} />)}
+      <section style={{ marginBottom: 32 }}>
+        <SectionHeader title="People" count={people.length} icon={<HiUsers size={16} />} />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: 14,
+          }}
+        >
+          {people.map((m) => (
+            <MemberCard key={m.id} member={m} />
+          ))}
         </div>
       </section>
 
       <section>
         <SectionHeader title="Agents" count={agents.length} icon={<RiRobot2Line size={16} />} />
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 16 }}>
-          {agents.map((m) => <MemberCard key={m.id} member={m} />)}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+            gap: 14,
+          }}
+        >
+          {agents.map((m) => (
+            <MemberCard key={m.id} member={m} />
+          ))}
         </div>
       </section>
     </div>

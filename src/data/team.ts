@@ -8,6 +8,8 @@ export interface TeamMember {
   emoji: string
   emojiCodepoints: string
   avatarSeed: string
+  email: string
+  channels: Record<string, string>
 }
 
 export interface AgentMember extends TeamMember {
@@ -15,6 +17,9 @@ export interface AgentMember extends TeamMember {
   prompt: string
   memory: MemoryEntry[]
   taskRuns: TaskRun[]
+  model: string
+  budget: { maxBudgetUsd: number; maxTurns: number }
+  requiresApproval: string[]
 }
 
 export interface MemoryEntry {
@@ -41,17 +46,23 @@ export const TEAM: (TeamMember | AgentMember)[] = [
     id: '1', name: 'Alice Chen', type: 'human', role: 'Project Manager',
     capabilities: ['Planning', 'Stakeholder Comms', 'Risk Assessment'],
     status: 'idle', emoji: '\u{1F60E}', emojiCodepoints: '1f60e', avatarSeed: 'Alice Chen work',
+    email: 'alice@acme.com', channels: { slack: 'C0ABC123', email: 'alice@acme.com' },
   },
   {
     id: '2', name: 'Bob Martinez', type: 'human', role: 'Analyst',
     capabilities: ['Data Analysis', 'SQL', 'Reporting'],
     status: 'busy', emoji: '\u{1F914}', emojiCodepoints: '1f914', avatarSeed: 'Bob Martinez lead',
+    email: 'bob@acme.com', channels: { slack: 'C0DEF456', email: 'bob@acme.com' },
   },
   {
     id: '3', name: 'Nora', type: 'agent', role: 'Research Specialist',
     capabilities: ['Web Research', 'Data Gathering', 'Summarisation'],
     status: 'idle', emoji: '\u{1F9D0}', emojiCodepoints: '1f9d0', avatarSeed: 'Nora sr',
+    email: '', channels: {},
     prompt: 'You are a research specialist. Your job is to find accurate, up-to-date information from multiple sources. Always cite your sources and flag conflicting data. Prioritise recency and authority of sources.',
+    model: 'claude-sonnet-4-5',
+    budget: { maxBudgetUsd: 1.0, maxTurns: 5 },
+    requiresApproval: [],
     memory: [
       { id: 'm1', content: 'User prefers bullet-point summaries over long paragraphs', timestamp: '2026-03-25 14:30' },
       { id: 'm2', content: 'Project Alpha requires data from SEC filings only', timestamp: '2026-03-24 09:15' },
@@ -67,7 +78,11 @@ export const TEAM: (TeamMember | AgentMember)[] = [
     id: '4', name: 'Felix', type: 'agent', role: 'Content Writer',
     capabilities: ['Drafting', 'Editing', 'Tone Matching'],
     status: 'busy', emoji: '\u{1F913}', emojiCodepoints: '1f913', avatarSeed: 'Felix dir',
+    email: '', channels: {},
     prompt: 'You are a content writer. Match the tone and style of existing documents. Write clearly and concisely. Avoid jargon unless the audience expects it. Always produce a draft first, then refine.',
+    model: 'claude-sonnet-4-5',
+    budget: { maxBudgetUsd: 2.0, maxTurns: 10 },
+    requiresApproval: ['client-communication'],
     memory: [
       { id: 'm4', content: 'Company style guide mandates Oxford commas', timestamp: '2026-03-25 11:00' },
       { id: 'm5', content: 'CEO prefers active voice in all comms', timestamp: '2026-03-23 08:30' },
@@ -82,7 +97,11 @@ export const TEAM: (TeamMember | AgentMember)[] = [
     id: '5', name: 'Mira', type: 'agent', role: 'Quality Reviewer',
     capabilities: ['Proofreading', 'Fact Checking', 'Compliance'],
     status: 'idle', emoji: '\u{1F928}', emojiCodepoints: '1f928', avatarSeed: 'Mira head',
+    email: '', channels: {},
     prompt: 'You are a quality reviewer. Check all documents for factual accuracy, grammar, compliance with internal policies, and consistency. Flag issues with severity levels: critical, warning, suggestion.',
+    model: 'claude-opus-4-6',
+    budget: { maxBudgetUsd: 1.5, maxTurns: 8 },
+    requiresApproval: ['compliance-review'],
     memory: [
       { id: 'm6', content: 'Compliance team updated data retention policy on 2026-03-20', timestamp: '2026-03-21 09:00' },
       { id: 'm7', content: 'Legal requires all client-facing docs to include disclaimer v3.2', timestamp: '2026-03-19 14:20' },
