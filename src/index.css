@@ -394,6 +394,29 @@ body {
   }
 }
 
+/* ── Deck cards ── */
+
+.deck-wrapper {
+  z-index: 0;
+  transition: z-index 0s 0.3s;
+}
+.deck-wrapper:hover {
+  z-index: 50 !important;
+  transition: z-index 0s 0s;
+}
+
+.deck-card {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.deck-card:hover {
+  transform: translateY(-20px) scale(1.05);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+.deck-card:first-child:hover {
+  transform: translateY(-20px) scale(1.05);
+}
+
 /* ── Existing animations ── */
 
 @keyframes pulse {

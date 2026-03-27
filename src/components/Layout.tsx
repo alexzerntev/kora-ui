@@ -13,7 +13,7 @@ import {
 
 const WORKSPACE_NAV = [
   { to: '/processes', icon: <TbRoute size={18} />, label: 'Processes' },
-  { to: '/team', icon: <HiUsers size={18} />, label: 'Team' },
+  { to: '/team', icon: <HiUsers size={18} />, label: 'Organization' },
   { to: '/tasks', icon: <TbLayoutList size={18} />, label: 'Tasks' },
 ]
 
@@ -32,7 +32,8 @@ export function Layout() {
 
   const isChat = location.pathname === '/chat' || location.pathname.startsWith('/chat/')
   const isWorkflowDetail = /^\/processes\/\w+/.test(location.pathname)
-  const isFullBleed = isChat || isWorkflowDetail
+  const isTeam = location.pathname === '/team'
+  const isFullBleed = isChat || isWorkflowDetail || isTeam
   const sidebarWidth = collapsed ? 56 : 252
 
   return (
