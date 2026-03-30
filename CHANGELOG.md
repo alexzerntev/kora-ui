@@ -4,6 +4,34 @@ All notable changes to this project are documented here.
 
 ---
 
+## 2026-03-30 — Design System: Codex-Minimal Glassy
+
+### Design Overhaul
+- Full redesign to match Codex (OpenAI) light theme aesthetic
+- Translucent frosted glass sidebar (backdrop-blur 24px, semi-transparent white)
+- Minimal nav items: icon + text, barely-there active highlight
+- No section labels, no accent bars — effortless minimalism
+- Executive dashboard with time-of-day greeting, stat cards with trend indicators, data table for processes, typed activity feed with per-action icons
+
+### Typography
+- Switched to DM Sans — warmer and rounder than Inter, more personality while staying professional
+- Tabular nums enabled globally for aligned number display
+
+### Color System
+- Warm background (#fafaf9) for approachability
+- Deepened secondary text (#374151) and muted text (#6b7280) for better readability
+- Deep blue accent (#1d4ed8) for primary actions
+- Status colors: emerald for done, amber for processing, blue for active
+
+### Technical
+- Removed shadcn/ui and all dependencies (base-ui, cva, clsx, tailwind-merge, lucide, tw-animate, fontsource-geist)
+- Pure Tailwind 4 with @theme directive for all design tokens
+- Fixed CSS cascade issue: removed manual `* { padding: 0 }` reset that was overriding all Tailwind utilities (Tailwind 4 layers)
+- Moved Google Fonts to HTML `<link>` to avoid @import ordering issues with Tailwind
+- Font loaded via `<link>` in index.html, referenced in @theme
+
+---
+
 ## 2026-03-30 — Codebase Reorganization
 
 ### Deleted unused files
