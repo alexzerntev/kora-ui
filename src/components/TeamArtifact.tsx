@@ -16,7 +16,12 @@ const NEW_AGENT: AgentMember = {
   emoji: '\u{1F9D0}',
   emojiCodepoints: '1f9d0',
   avatarSeed: 'Atlas analyst new',
+  email: '',
+  channels: {},
   prompt: 'You are a research analyst. Dig deep into topics, cross-reference sources, and produce well-cited briefs.',
+  model: 'claude-sonnet-4-5',
+  budget: { maxBudgetUsd: 1.0, maxTurns: 5 },
+  requiresApproval: [],
   memory: [],
   taskRuns: [],
 }

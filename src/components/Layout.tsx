@@ -14,11 +14,11 @@ import {
 } from 'react-icons/tb'
 
 const WORKSPACE_NAV = [
-  { to: '/dashboard', icon: <TbLayoutDashboard size={18} />, label: 'Dashboard' },
-  { to: '/processes', icon: <TbRoute size={18} />, label: 'Processes' },
-  { to: '/team', icon: <HiUsers size={18} />, label: 'Team' },
-  { to: '/organization', icon: <TbSitemap size={18} />, label: 'Organization' },
-  { to: '/admin', icon: <TbBuildingCommunity size={18} />, label: 'Administration' },
+  { to: '/dashboard', icon: TbLayoutDashboard, label: 'Dashboard' },
+  { to: '/processes', icon: TbRoute, label: 'Processes' },
+  { to: '/team', icon: HiUsers, label: 'Team' },
+  { to: '/organization', icon: TbSitemap, label: 'Organization' },
+  { to: '/admin', icon: TbBuildingCommunity, label: 'Administration' },
 ]
 
 const RECENT_CHATS = [
@@ -28,6 +28,59 @@ const RECENT_CHATS = [
   { id: 'c4', title: 'Configure Slack connector' },
   { id: 'c5', title: 'Sprint planning automation' },
 ]
+
+function SidebarNavItem({
+  to,
+  icon: Icon,
+  label,
+  collapsed,
+  active,
+}: {
+  to: string
+  icon: React.ComponentType<{ size: number }>
+  label: string
+  collapsed: boolean
+  active: boolean
+}) {
+  return (
+    <NavLink
+      to={to}
+      title={collapsed ? label : undefined}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        padding: collapsed ? '9px 0' : '9px 12px',
+        justifyContent: collapsed ? 'center' : undefined,
+        borderRadius: 8,
+        fontSize: 14,
+        fontWeight: active ? 600 : 500,
+        color: active ? '#ffffff' : 'rgba(255,255,255,0.65)',
+        background: active ? 'rgba(255,255,255,0.12)' : 'transparent',
+        transition: 'all 0.15s ease',
+        textDecoration: 'none',
+        letterSpacing: '-0.01em',
+      }}
+      onMouseEnter={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+          e.currentTarget.style.color = 'rgba(255,255,255,0.9)'
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!active) {
+          e.currentTarget.style.background = 'transparent'
+          e.currentTarget.style.color = 'rgba(255,255,255,0.65)'
+        }
+      }}
+    >
+      <span style={{ display: 'flex', flexShrink: 0 }}>
+        <Icon size={19} />
+      </span>
+      {!collapsed && <span className="truncate">{label}</span>}
+    </NavLink>
+  )
+}
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -39,44 +92,54 @@ export function Layout() {
   const isTeam = location.pathname === '/team'
   const isOrganization = location.pathname === '/organization'
   const isFullBleed = isChat || isWorkflowDetail || isTeam || isOrganization
-  const sidebarWidth = collapsed ? 56 : 252
+  const sidebarWidth = collapsed ? 60 : 260
 
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', background: '#fff' }}>
-      {/* ── Sidebar ── */}
+    <div className="flex h-screen overflow-hidden">
+      {/* Sidebar */}
       <aside
-        className="sidebar"
+        className="sidebar-scroll flex shrink-0 flex-col overflow-hidden transition-[width] duration-250 ease-[cubic-bezier(0.4,0,0.2,1)]"
         style={{
           width: sidebarWidth,
-          minWidth: sidebarWidth,
-          transition: 'width 0.25s cubic-bezier(0.4, 0, 0.2, 1), min-width 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-          background: 'var(--sidebar-bg)',
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          borderRight: '1px solid var(--sidebar-border)',
+          background: '#1e1b4b',
         }}
       >
-        {/* Header — logo + collapse toggle */}
+        {/* Header */}
         <div
           style={{
             display: 'flex',
+            height: 56,
             alignItems: 'center',
             justifyContent: collapsed ? 'center' : 'space-between',
-            padding: collapsed ? '14px 0' : '14px 14px 14px 16px',
-            height: 56,
+            padding: collapsed ? '0' : '0 14px 0 18px',
             flexShrink: 0,
           }}
         >
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-              <div className="sidebar-logo">K</div>
+              <div
+                style={{
+                  width: 28,
+                  height: 28,
+                  borderRadius: 8,
+                  background: 'rgba(255,255,255,0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 13,
+                  fontWeight: 800,
+                  color: '#ffffff',
+                  flexShrink: 0,
+                }}
+              >
+                K
+              </div>
               <span
                 style={{
-                  fontSize: 15,
-                  fontWeight: 800,
-                  letterSpacing: '-0.04em',
-                  color: 'var(--sidebar-ink)',
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: '#ffffff',
+                  letterSpacing: '-0.02em',
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -86,36 +149,62 @@ export function Layout() {
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="sidebar-toggle"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{
+              display: 'flex',
+              width: 28,
+              height: 28,
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 6,
+              border: 'none',
+              background: 'transparent',
+              color: 'rgba(255,255,255,0.5)',
+              cursor: 'pointer',
+              flexShrink: 0,
+              transition: 'color 0.15s ease, background 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = 'rgba(255,255,255,0.9)'
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = 'rgba(255,255,255,0.5)'
+              e.currentTarget.style.background = 'transparent'
+            }}
           >
             {collapsed ? <TbLayoutSidebarLeftExpand size={18} /> : <TbLayoutSidebarLeftCollapse size={18} />}
           </button>
         </div>
 
-        {/* ── Workspace section ── */}
-        <div style={{ padding: collapsed ? '8px 8px' : '8px 10px', flexShrink: 0 }}>
-          {!collapsed && <div className="sidebar-section-label">Workspace</div>}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {WORKSPACE_NAV.map((item) => {
-              const isActive = location.pathname.startsWith(item.to)
-              return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                  style={{
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    padding: collapsed ? '8px 0' : '7px 10px',
-                  }}
-                  title={collapsed ? item.label : undefined}
-                >
-                  <span style={{ flexShrink: 0, display: 'flex' }}>{item.icon}</span>
-                  {!collapsed && <span>{item.label}</span>}
-                </NavLink>
-              )
-            })}
+        {/* Workspace nav */}
+        <div style={{ padding: collapsed ? '8px 8px' : '8px 12px', flexShrink: 0 }}>
+          {!collapsed && (
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                color: 'rgba(255,255,255,0.35)',
+                padding: '0 12px',
+                marginBottom: 6,
+              }}
+            >
+              Workspace
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column' as const, gap: 2 }}>
+            {WORKSPACE_NAV.map((item) => (
+              <SidebarNavItem
+                key={item.to}
+                to={item.to}
+                icon={item.icon}
+                label={item.label}
+                collapsed={collapsed}
+                active={location.pathname.startsWith(item.to)}
+              />
+            ))}
           </div>
         </div>
 
@@ -123,27 +212,54 @@ export function Layout() {
         <div
           style={{
             height: 1,
-            background: 'var(--sidebar-border)',
-            margin: collapsed ? '6px 8px' : '6px 14px',
+            background: 'rgba(255,255,255,0.08)',
+            margin: collapsed ? '4px 8px' : '4px 18px',
             flexShrink: 0,
           }}
         />
 
-        {/* ── Chat section ── */}
+        {/* Chat section */}
         <div
           style={{
-            flex: 1,
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'column' as const,
+            flex: 1,
+            minHeight: 0,
             overflow: 'hidden',
-            padding: collapsed ? '8px 8px' : '8px 10px',
+            padding: collapsed ? '8px 8px' : '8px 12px',
           }}
         >
-          {/* New Chat button */}
+          {/* New Chat */}
           <button
             onClick={() => navigate('/chat')}
-            className={`sidebar-new-chat ${collapsed ? 'collapsed' : ''}`}
             title={collapsed ? 'New Chat' : undefined}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              justifyContent: collapsed ? 'center' : undefined,
+              padding: collapsed ? '9px 0' : '9px 12px',
+              borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.15)',
+              background: 'rgba(255,255,255,0.06)',
+              color: 'rgba(255,255,255,0.8)',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              flexShrink: 0,
+              fontFamily: 'inherit',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.25)'
+              e.currentTarget.style.color = '#ffffff'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255,255,255,0.06)'
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'
+              e.currentTarget.style.color = 'rgba(255,255,255,0.8)'
+            }}
           >
             <TbPlus size={16} strokeWidth={2.5} />
             {!collapsed && <span>New Chat</span>}
@@ -151,19 +267,30 @@ export function Layout() {
 
           {/* Recent chats */}
           {!collapsed && (
-            <div className="sidebar-section-label" style={{ marginTop: 16 }}>
+            <div
+              style={{
+                fontSize: 11,
+                fontWeight: 600,
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.06em',
+                color: 'rgba(255,255,255,0.35)',
+                padding: '0 12px',
+                marginTop: 16,
+                marginBottom: 6,
+              }}
+            >
               Recent
             </div>
           )}
-
           <div
+            className="sidebar-scroll"
             style={{
-              flex: 1,
-              overflowY: 'auto',
-              overflowX: 'hidden',
               display: 'flex',
-              flexDirection: 'column',
+              flexDirection: 'column' as const,
+              flex: 1,
               gap: 1,
+              overflowY: 'auto' as const,
+              overflowX: 'hidden' as const,
               marginTop: collapsed ? 8 : 0,
             }}
           >
@@ -173,72 +300,68 @@ export function Layout() {
                 <NavLink
                   key={chat.id}
                   to={`/chat/${chat.id}`}
-                  className={`sidebar-nav-item ${chatActive ? 'active' : ''}`}
-                  style={{
-                    justifyContent: collapsed ? 'center' : 'flex-start',
-                    padding: collapsed ? '8px 0' : '7px 10px',
-                  }}
                   title={collapsed ? chat.title : undefined}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : undefined,
+                    padding: collapsed ? '8px 0' : '8px 12px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: chatActive ? 600 : 400,
+                    color: chatActive ? '#ffffff' : 'rgba(255,255,255,0.55)',
+                    background: chatActive ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    transition: 'all 0.15s ease',
+                    textDecoration: 'none',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis' as const,
+                    whiteSpace: 'nowrap' as const,
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!chatActive) {
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.85)'
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.05)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!chatActive) {
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
+                      e.currentTarget.style.background = 'transparent'
+                    }
+                  }}
                 >
-                  {collapsed ? (
-                    <TbMessage size={16} />
-                  ) : (
-                    <span
-                      style={{
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {chat.title}
-                    </span>
-                  )}
+                  {collapsed ? <TbMessage size={16} /> : <span className="truncate">{chat.title}</span>}
                 </NavLink>
               )
             })}
           </div>
         </div>
 
-        {/* ── Settings button ── */}
+        {/* Settings */}
         <div
           style={{
-            padding: collapsed ? '8px 8px' : '8px 10px',
             flexShrink: 0,
-            borderTop: '1px solid var(--sidebar-border)',
+            borderTop: '1px solid rgba(255,255,255,0.08)',
+            padding: collapsed ? '8px 8px' : '8px 12px',
           }}
         >
-          <NavLink
+          <SidebarNavItem
             to="/settings"
-            className={`sidebar-nav-item ${location.pathname.startsWith('/settings') ? 'active' : ''}`}
-            style={{
-              justifyContent: collapsed ? 'center' : 'flex-start',
-              padding: collapsed ? '8px 0' : '7px 10px',
-            }}
-            title={collapsed ? 'Settings' : undefined}
-          >
-            <span style={{ flexShrink: 0, display: 'flex' }}>
-              <TbSettings size={18} />
-            </span>
-            {!collapsed && <span>Settings</span>}
-          </NavLink>
+            icon={TbSettings}
+            label="Settings"
+            collapsed={collapsed}
+            active={location.pathname.startsWith('/settings')}
+          />
         </div>
       </aside>
 
-      {/* ── Main content ── */}
-      <main
-        style={{
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          overflow: 'hidden',
-          minWidth: 0,
-        }}
-      >
+      {/* Main content */}
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         {isFullBleed ? (
           <Outlet />
         ) : (
-          <div style={{ flex: 1, overflowY: 'auto' }}>
-            <div style={{ padding: '28px 36px', maxWidth: 1200, margin: '0 auto' }}>
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-5xl px-10 py-10">
               <Outlet />
             </div>
           </div>
