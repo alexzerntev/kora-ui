@@ -54,6 +54,7 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
         gap: hasAvatar ? 10 : 0,
         overflow: 'hidden',
         fontFamily: "'DM Sans', system-ui, sans-serif",
+        cursor: 'pointer',
         opacity: isDimmed ? 0.15 : 1,
         transition: 'opacity 0.2s ease',
       }}

@@ -2,11 +2,13 @@ import { useMemo, useState, useCallback } from 'react'
 import { ReactFlow, Background, Controls, type Node, type Edge } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { OrgNode } from '../components/nodes/OrgNode'
+import { EntityDetailModal, type EntityData } from '../components/EntityDetailModal'
 import { useTeam, useRoles, useTasks, useAssignments } from '../providers/hooks'
 import type { TeamMember, AgentMember } from '../providers/types'
 import type { Role } from '../providers/types'
 import type { Task } from '../providers/types'
 import type { Assignment } from '../providers/types'
+import { isAgent } from '../data/team'
 import { optimizeNodeOrder, type Connection } from '../utils/orgLayout'
 import { OrgHoverContext, type OrgHoverState } from '../contexts/OrgHoverContext'
 
@@ -306,6 +308,7 @@ export function Organization() {
   const { data: assignments } = useAssignments()
 
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+  const [selectedEntity, setSelectedEntity] = useState<EntityData | null>(null)
 
   const { nodes: baseNodes, edges: baseEdges } = useMemo(() => {
     if (!team || !roles || !tasks || !assignments) {
@@ -315,6 +318,7 @@ export function Organization() {
   }, [team, roles, tasks, assignments])
 
   const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
+    if (node.id.startsWith('group-')) return
     setHoveredNodeId(node.id)
   }, [])
 
@@ -322,61 +326,82 @@ export function Organization() {
     setHoveredNodeId(null)
   }, [])
 
-  // 2-hop highlight: compute connected node & edge sets for hover dimming.
-  // Instead of creating new node objects (which causes re-renders and blink loops),
-  // we pass hover state via context so OrgNode handles its own opacity via CSS.
-  const connectedNodeIds = useMemo(() => {
-    if (!hoveredNodeId) return new Set<string>()
+  const onNodeClick = useCallback(
+    (_: React.MouseEvent, node: Node) => {
+      if (node.id.startsWith('group-')) return
+      if (!team || !roles || !tasks) return
 
-    const ids = new Set<string>([hoveredNodeId])
-    const edgeIds = new Set<string>()
-
-    // 1st hop
-    baseEdges.forEach((e) => {
-      if (e.source === hoveredNodeId || e.target === hoveredNodeId) {
-        edgeIds.add(e.id)
-        ids.add(e.source)
-        ids.add(e.target)
+      // Parse the node ID to find the entity
+      if (node.id.startsWith('member-')) {
+        const memberId = node.id.replace('member-', '')
+        const member = team.find((m) => m.id === memberId)
+        if (member) {
+          if (isAgent(member)) {
+            setSelectedEntity({ kind: 'agent', data: member })
+          } else {
+            setSelectedEntity({ kind: 'person', data: member })
+          }
+        }
+      } else if (node.id.startsWith('role-')) {
+        const roleId = node.id.replace('role-', '')
+        const role = roles.find((r) => r.id === roleId)
+        if (role) {
+          setSelectedEntity({ kind: 'role', data: role })
+        }
+      } else if (node.id.startsWith('task-')) {
+        const taskId = node.id.replace('task-', '')
+        const task = tasks.find((t) => t.id === taskId)
+        if (task) {
+          setSelectedEntity({ kind: 'task', data: task })
+        }
       }
-    })
+    },
+    [team, roles, tasks],
+  )
 
-    // 2nd hop
-    baseEdges.forEach((e) => {
-      if (ids.has(e.source) || ids.has(e.target)) {
-        edgeIds.add(e.id)
-        ids.add(e.source)
-        ids.add(e.target)
-      }
-    })
-
-    return ids
-  }, [baseEdges, hoveredNodeId])
-
-  const connectedEdgeIds = useMemo(() => {
-    if (!hoveredNodeId) return new Set<string>()
-
-    const nodeIds = new Set<string>([hoveredNodeId])
+  // Directional 2-hop highlight: follow edges forward AND backward from hovered node,
+  // but only along the actual connection chain — not pulling in unrelated branches.
+  const { connectedNodeIds, connectedEdgeIds } = useMemo(() => {
+    const nodeIds = new Set<string>()
     const edgeIds = new Set<string>()
+    if (!hoveredNodeId) return { connectedNodeIds: nodeIds, connectedEdgeIds: edgeIds }
 
-    // 1st hop
+    nodeIds.add(hoveredNodeId)
+
+    // 1st hop: direct connections (both directions)
+    const forwardNodes = new Set<string>() // nodes reached going source→target
+    const backwardNodes = new Set<string>() // nodes reached going target→source
+
     baseEdges.forEach((e) => {
-      if (e.source === hoveredNodeId || e.target === hoveredNodeId) {
+      if (e.source === hoveredNodeId) {
+        edgeIds.add(e.id)
+        nodeIds.add(e.target)
+        forwardNodes.add(e.target)
+      }
+      if (e.target === hoveredNodeId) {
         edgeIds.add(e.id)
         nodeIds.add(e.source)
+        backwardNodes.add(e.source)
+      }
+    })
+
+    // 2nd hop forward: from nodes reached forward, continue forward
+    baseEdges.forEach((e) => {
+      if (forwardNodes.has(e.source)) {
+        edgeIds.add(e.id)
         nodeIds.add(e.target)
       }
     })
 
-    // 2nd hop
+    // 2nd hop backward: from nodes reached backward, continue backward
     baseEdges.forEach((e) => {
-      if (nodeIds.has(e.source) || nodeIds.has(e.target)) {
+      if (backwardNodes.has(e.target)) {
         edgeIds.add(e.id)
         nodeIds.add(e.source)
-        nodeIds.add(e.target)
       }
     })
 
-    return edgeIds
+    return { connectedNodeIds: nodeIds, connectedEdgeIds: edgeIds }
   }, [baseEdges, hoveredNodeId])
 
   // Edges: apply className for dimming instead of creating new style objects.
@@ -456,6 +481,7 @@ export function Organization() {
             elementsSelectable
             onNodeMouseEnter={onNodeMouseEnter}
             onNodeMouseLeave={onNodeMouseLeave}
+            onNodeClick={onNodeClick}
           >
             <Background gap={32} size={1} color="#e8e8e8" />
             <Controls
@@ -471,6 +497,9 @@ export function Organization() {
           </ReactFlow>
         </OrgHoverContext.Provider>
       </div>
+
+      {/* Entity detail modal */}
+      {selectedEntity && <EntityDetailModal entity={selectedEntity} onClose={() => setSelectedEntity(null)} />}
     </div>
   )
 }
