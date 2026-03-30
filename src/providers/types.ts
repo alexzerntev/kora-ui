@@ -10,6 +10,8 @@ export type {
   SandboxNetwork,
   SandboxEgressRule,
 } from '../data/project'
+export type { ProcessRun, RunStatus, PendingAction, PendingActionType } from '../data/runs'
+export type { ActivityEntry } from '../data/activity'
 
 export { TYPE_COLORS } from '../data/team'
 
@@ -19,6 +21,17 @@ import type { Task } from '../data/tasks'
 import type { Workflow } from '../data/workflows'
 import type { Assignment } from '../data/assignments'
 import type { Project } from '../data/project'
+import type { ProcessRun, PendingAction } from '../data/runs'
+import type { ActivityEntry } from '../data/activity'
+
+/** Real-time events emitted by the data provider */
+export type DataEvent =
+  | { type: 'process.started'; processId: string; timestamp: Date }
+  | { type: 'process.completed'; processId: string; timestamp: Date }
+  | { type: 'process.failed'; processId: string; error: string; timestamp: Date }
+  | { type: 'task.assigned'; taskId: string; assignee: string; timestamp: Date }
+  | { type: 'task.completed'; taskId: string; assignee: string; timestamp: Date }
+  | { type: 'activity'; text: string; timestamp: Date }
 
 export interface DataProvider {
   /** List all workflows/processes */
@@ -47,4 +60,16 @@ export interface DataProvider {
 
   /** Get project settings */
   getProject(): Promise<Project>
+
+  /** List active process runs with status */
+  getProcessRuns(): Promise<ProcessRun[]>
+
+  /** List pending actions requiring human input */
+  getPendingActions(): Promise<PendingAction[]>
+
+  /** Get recent activity feed entries */
+  getActivityFeed(): Promise<ActivityEntry[]>
+
+  /** Subscribe to real-time events — returns an unsubscribe function */
+  subscribe(callback: (event: DataEvent) => void): () => void
 }

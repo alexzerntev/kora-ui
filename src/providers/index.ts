@@ -10,8 +10,12 @@ export {
   useTasks,
   useAssignments,
   useProject,
+  useProcessRuns,
+  usePendingActions,
+  useActivityFeed,
+  useSubscription,
 } from './hooks'
-export type { DataProvider } from './types'
+export type { DataProvider, DataEvent } from './types'
 export type {
   TeamMember,
   AgentMember,
@@ -28,5 +32,10 @@ export type {
   MachineExecutionDefaults,
   SandboxNetwork,
   SandboxEgressRule,
+  ProcessRun,
+  RunStatus,
+  PendingAction,
+  PendingActionType,
+  ActivityEntry,
 } from './types'
 export { TYPE_COLORS } from './types'
