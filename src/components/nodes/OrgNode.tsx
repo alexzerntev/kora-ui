@@ -1,5 +1,7 @@
-import { Handle, Position } from '@xyflow/react'
+import { useContext } from 'react'
+import { Handle, Position, useNodeId } from '@xyflow/react'
 import { Avatar } from '../Avatar'
+import { OrgHoverContext } from '../../contexts/OrgHoverContext'
 
 interface OrgNodeData {
   name: string
@@ -31,6 +33,12 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
   const styles = TYPE_STYLES[type]
   const hasAvatar = showAvatar(type)
 
+  const nodeId = useNodeId()
+  const { hoveredNodeId, connectedNodeIds } = useContext(OrgHoverContext)
+
+  // Compute opacity: full when no hover active, or when this node is connected; dimmed otherwise
+  const isDimmed = hoveredNodeId !== null && nodeId !== null && !connectedNodeIds.has(nodeId)
+
   return (
     <div
       style={{
@@ -46,6 +54,8 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
         gap: hasAvatar ? 10 : 0,
         overflow: 'hidden',
         fontFamily: "'DM Sans', system-ui, sans-serif",
+        opacity: isDimmed ? 0.15 : 1,
+        transition: 'opacity 0.2s ease',
       }}
     >
       <Handle

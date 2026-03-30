@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState, useCallback } from 'react'
 import { ReactFlow, Background, Controls, type Node, type Edge } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { OrgNode } from '../components/nodes/OrgNode'
@@ -8,6 +8,7 @@ import type { Role } from '../providers/types'
 import type { Task } from '../providers/types'
 import type { Assignment } from '../providers/types'
 import { optimizeNodeOrder, type Connection } from '../utils/orgLayout'
+import { OrgHoverContext, type OrgHoverState } from '../contexts/OrgHoverContext'
 
 /* ------------------------------------------------------------------ */
 /*  Group label node                                                   */
@@ -304,12 +305,95 @@ export function Organization() {
   const { data: tasks } = useTasks()
   const { data: assignments } = useAssignments()
 
-  const { nodes, edges } = useMemo(() => {
+  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
+
+  const { nodes: baseNodes, edges: baseEdges } = useMemo(() => {
     if (!team || !roles || !tasks || !assignments) {
       return { nodes: [], edges: [] }
     }
     return buildGraph(team, roles, tasks, assignments)
   }, [team, roles, tasks, assignments])
+
+  const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
+    setHoveredNodeId(node.id)
+  }, [])
+
+  const onNodeMouseLeave = useCallback(() => {
+    setHoveredNodeId(null)
+  }, [])
+
+  // 2-hop highlight: compute connected node & edge sets for hover dimming.
+  // Instead of creating new node objects (which causes re-renders and blink loops),
+  // we pass hover state via context so OrgNode handles its own opacity via CSS.
+  const connectedNodeIds = useMemo(() => {
+    if (!hoveredNodeId) return new Set<string>()
+
+    const ids = new Set<string>([hoveredNodeId])
+    const edgeIds = new Set<string>()
+
+    // 1st hop
+    baseEdges.forEach((e) => {
+      if (e.source === hoveredNodeId || e.target === hoveredNodeId) {
+        edgeIds.add(e.id)
+        ids.add(e.source)
+        ids.add(e.target)
+      }
+    })
+
+    // 2nd hop
+    baseEdges.forEach((e) => {
+      if (ids.has(e.source) || ids.has(e.target)) {
+        edgeIds.add(e.id)
+        ids.add(e.source)
+        ids.add(e.target)
+      }
+    })
+
+    return ids
+  }, [baseEdges, hoveredNodeId])
+
+  const connectedEdgeIds = useMemo(() => {
+    if (!hoveredNodeId) return new Set<string>()
+
+    const nodeIds = new Set<string>([hoveredNodeId])
+    const edgeIds = new Set<string>()
+
+    // 1st hop
+    baseEdges.forEach((e) => {
+      if (e.source === hoveredNodeId || e.target === hoveredNodeId) {
+        edgeIds.add(e.id)
+        nodeIds.add(e.source)
+        nodeIds.add(e.target)
+      }
+    })
+
+    // 2nd hop
+    baseEdges.forEach((e) => {
+      if (nodeIds.has(e.source) || nodeIds.has(e.target)) {
+        edgeIds.add(e.id)
+        nodeIds.add(e.source)
+        nodeIds.add(e.target)
+      }
+    })
+
+    return edgeIds
+  }, [baseEdges, hoveredNodeId])
+
+  // Edges: apply className for dimming instead of creating new style objects.
+  // Edge re-renders don't cause the blink loop (no mouse interaction on edges),
+  // but we use className + CSS for consistency and performance.
+  const edges = useMemo(() => {
+    if (!hoveredNodeId) return baseEdges
+    return baseEdges.map((e) => ({
+      ...e,
+      className: connectedEdgeIds.has(e.id) ? 'org-edge-highlight' : 'org-edge-dimmed',
+    }))
+  }, [baseEdges, hoveredNodeId, connectedEdgeIds])
+
+  const hoverState = useMemo<OrgHoverState>(
+    () => ({ hoveredNodeId, connectedNodeIds }),
+    [hoveredNodeId, connectedNodeIds],
+  )
 
   if (!team || !roles || !tasks || !assignments) {
     return (
@@ -359,29 +443,33 @@ export function Organization() {
 
       {/* ReactFlow canvas */}
       <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          proOptions={{ hideAttribution: true }}
-          nodesDraggable
-          nodesConnectable={false}
-          elementsSelectable
-        >
-          <Background gap={32} size={1} color="#e8e8e8" />
-          <Controls
-            showInteractive={false}
-            position="bottom-right"
-            style={{
-              borderRadius: 12,
-              border: '1px solid var(--color-border-light)',
-              overflow: 'hidden',
-              background: '#fff',
-            }}
-          />
-        </ReactFlow>
+        <OrgHoverContext.Provider value={hoverState}>
+          <ReactFlow
+            nodes={baseNodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            proOptions={{ hideAttribution: true }}
+            nodesDraggable
+            nodesConnectable={false}
+            elementsSelectable
+            onNodeMouseEnter={onNodeMouseEnter}
+            onNodeMouseLeave={onNodeMouseLeave}
+          >
+            <Background gap={32} size={1} color="#e8e8e8" />
+            <Controls
+              showInteractive={false}
+              position="bottom-right"
+              style={{
+                borderRadius: 12,
+                border: '1px solid var(--color-border-light)',
+                overflow: 'hidden',
+                background: '#fff',
+              }}
+            />
+          </ReactFlow>
+        </OrgHoverContext.Provider>
       </div>
     </div>
   )

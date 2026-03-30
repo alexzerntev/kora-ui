@@ -480,3 +480,17 @@ body {
   background: transparent !important;
   padding: 0 !important;
 }
+
+/* ── Organization hover: edge dimming ── */
+
+.react-flow__edge path {
+  transition: opacity 0.2s ease;
+}
+
+.org-edge-highlight path {
+  opacity: 1;
+}
+
+.org-edge-dimmed path {
+  opacity: 0.08;
+}
