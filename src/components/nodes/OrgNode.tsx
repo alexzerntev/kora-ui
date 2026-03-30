@@ -4,15 +4,15 @@ import { Avatar } from '../Avatar'
 interface OrgNodeData {
   name: string
   type: 'person' | 'agent' | 'role' | 'task'
-  avatar?: string // avatarSeed for DiceBear
+  avatar?: string // avatarSeed for DiceBear (agents only)
   capabilities: string[]
 }
 
-const TYPE_STYLES: Record<OrgNodeData['type'], { bg: string; text: string; initials: string }> = {
-  person: { bg: '#f5f3ff', text: '#7c3aed', initials: '#7c3aed' },
-  agent: { bg: '#ecfeff', text: '#0891b2', initials: '#0891b2' },
-  role: { bg: '#eff6ff', text: '#1d4ed8', initials: '#1d4ed8' },
-  task: { bg: '#f0fdf4', text: '#16a34a', initials: '#16a34a' },
+const TYPE_STYLES: Record<OrgNodeData['type'], { bg: string; initials: string }> = {
+  person: { bg: '#f5f3ff', initials: '#7c3aed' },
+  agent: { bg: '#ecfeff', initials: '#0891b2' },
+  role: { bg: '#eff6ff', initials: '#1d4ed8' },
+  task: { bg: '#f0fdf4', initials: '#16a34a' },
 }
 
 function getInitials(name: string): string {
@@ -24,21 +24,25 @@ function getInitials(name: string): string {
     .slice(0, 2)
 }
 
+const showAvatar = (type: OrgNodeData['type']) => type === 'person' || type === 'agent'
+
 export function OrgNode({ data }: { data: OrgNodeData }) {
   const { name, type, avatar, capabilities } = data
   const styles = TYPE_STYLES[type]
+  const hasAvatar = showAvatar(type)
 
   return (
     <div
       style={{
-        background: '#fff',
+        background: '#ffffff',
         borderRadius: 8,
         border: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
         width: 220,
         padding: '10px 12px',
         display: 'flex',
         alignItems: 'flex-start',
-        gap: 10,
+        gap: hasAvatar ? 10 : 0,
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
@@ -53,23 +57,20 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
         }}
       />
 
-      {/* Avatar circle */}
-      <div
-        style={{
-          width: 36,
-          height: 36,
-          borderRadius: '50%',
-          background: styles.bg,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          overflow: 'hidden',
-        }}
-      >
-        {avatar ? (
-          <Avatar seed={avatar} size={36} />
-        ) : (
+      {/* Avatar: People get initials circle, Agents get DiceBear, Roles/Tasks get nothing */}
+      {type === 'person' && (
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            background: styles.bg,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
           <span
             style={{
               fontSize: 12,
@@ -80,8 +81,25 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
           >
             {getInitials(name)}
           </span>
-        )}
-      </div>
+        </div>
+      )}
+      {type === 'agent' && avatar && (
+        <div
+          style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            background: styles.bg,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+            overflow: 'hidden',
+          }}
+        >
+          <Avatar seed={avatar} size={36} />
+        </div>
+      )}
 
       {/* Text content */}
       <div style={{ flex: 1, minWidth: 0 }}>

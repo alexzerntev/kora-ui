@@ -8,8 +8,42 @@ import type { Role } from '../providers/types'
 import type { Task } from '../providers/types'
 import type { Assignment } from '../providers/types'
 
+/* ------------------------------------------------------------------ */
+/*  Group label node                                                   */
+/* ------------------------------------------------------------------ */
+
+function GroupLabelNode({ data }: { data: { label: string; width: number; height: number; color: string } }) {
+  return (
+    <div
+      style={{
+        width: data.width,
+        height: data.height,
+        background: data.color,
+        borderRadius: 12,
+        border: '1px solid rgba(0,0,0,0.04)',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        style={{
+          padding: '10px 14px',
+          fontSize: 11,
+          fontWeight: 600,
+          color: '#6b7280',
+          textTransform: 'uppercase',
+          letterSpacing: '0.06em',
+          fontFamily: "'DM Sans', system-ui, sans-serif",
+        }}
+      >
+        {data.label}
+      </div>
+    </div>
+  )
+}
+
 const nodeTypes = {
   orgNode: OrgNode,
+  groupLabel: GroupLabelNode,
 }
 
 /* ------------------------------------------------------------------ */
@@ -20,6 +54,10 @@ const CARD_W = 220
 const CARD_H = 62 // approximate height of OrgNode
 const COL_GAP = 200 // horizontal gap between columns
 const ROW_GAP = 16 // vertical gap between cards in a column
+const GROUP_PAD_X = 16 // horizontal padding inside group
+const GROUP_PAD_TOP = 40 // space for group label at top
+const GROUP_PAD_BOTTOM = 16 // padding at bottom of group
+const GROUP_GAP = 40 // vertical gap between People and Agents groups
 
 /* ------------------------------------------------------------------ */
 /*  Build the horizontal org graph                                     */
@@ -34,10 +72,9 @@ function buildGraph(
   const nodes: Node[] = []
   const edges: Edge[] = []
 
-  // Column 0: People & Agents (combined, people first)
+  // Separate people and agents
   const people = team.filter((m) => m.type === 'human')
   const agents = team.filter((m) => m.type === 'agent')
-  const membersOrdered = [...people, ...agents]
 
   // Build assignment lookups
   const memberToRoles = new Map<string, string[]>()
@@ -51,7 +88,7 @@ function buildGraph(
     roleToMembers.get(a.roleId)!.push(a.memberId)
   }
 
-  // Build role → task connections based on capabilities
+  // Build role -> task connections based on capabilities
   for (const role of roles) {
     const allCaps = [...role.requiredCapabilities, ...role.optionalCapabilities]
     const connectedTaskIds: string[] = []
@@ -63,7 +100,8 @@ function buildGraph(
     roleToTasks.set(role.id, connectedTaskIds)
   }
 
-  // Order roles to minimize edge crossings with members
+  // Order: all members (people first, agents second) for index map
+  const membersOrdered = [...people, ...agents]
   const memberIndexMap = new Map<string, number>()
   membersOrdered.forEach((m, i) => memberIndexMap.set(m.id, i))
 
@@ -77,7 +115,6 @@ function buildGraph(
     return aAvg - bAvg
   })
 
-  // Order tasks to minimize edge crossings with roles
   const roleIndexMap = new Map<string, number>()
   orderedRoles.forEach((r, i) => roleIndexMap.set(r.id, i))
 
@@ -95,47 +132,126 @@ function buildGraph(
     return aAvg - bAvg
   })
 
-  // Compute column heights to center vertically
-  const col0Count = membersOrdered.length
-  const col1Count = orderedRoles.length
-  const col2Count = orderedTasks.length
+  /* ── Column X positions ── */
+  const col0X = 0 // People + Agents (stacked)
+  const col1X = CARD_W + COL_GAP + GROUP_PAD_X * 2 // Roles
+  const col2X = 2 * (CARD_W + COL_GAP + GROUP_PAD_X * 2) // Tasks
 
-  const col0Height = col0Count * CARD_H + (col0Count - 1) * ROW_GAP
-  const col1Height = col1Count * CARD_H + (col1Count - 1) * ROW_GAP
-  const col2Height = col2Count * CARD_H + (col2Count - 1) * ROW_GAP
+  /* ── Compute group dimensions ── */
+  const groupWidth = CARD_W + GROUP_PAD_X * 2
 
-  const maxHeight = Math.max(col0Height, col1Height, col2Height)
+  // People group
+  const peopleContentH = people.length * CARD_H + (people.length - 1) * ROW_GAP
+  const peopleGroupH = GROUP_PAD_TOP + peopleContentH + GROUP_PAD_BOTTOM
 
-  const col0StartY = (maxHeight - col0Height) / 2
-  const col1StartY = (maxHeight - col1Height) / 2
-  const col2StartY = (maxHeight - col2Height) / 2
+  // Agents group (positioned below people)
+  const agentsContentH = agents.length * CARD_H + (agents.length - 1) * ROW_GAP
+  const agentsGroupH = GROUP_PAD_TOP + agentsContentH + GROUP_PAD_BOTTOM
+  const agentsGroupY = peopleGroupH + GROUP_GAP
 
-  const col0X = 0
-  const col1X = CARD_W + COL_GAP
-  const col2X = 2 * (CARD_W + COL_GAP)
+  // Total col0 height
+  const col0TotalH = agentsGroupY + agentsGroupH
 
-  // Column 0: Members
-  membersOrdered.forEach((m, i) => {
-    const nodeType: 'person' | 'agent' = m.type === 'human' ? 'person' : 'agent'
+  // Roles group
+  const rolesContentH = orderedRoles.length * CARD_H + (orderedRoles.length - 1) * ROW_GAP
+  const rolesGroupH = GROUP_PAD_TOP + rolesContentH + GROUP_PAD_BOTTOM
+
+  // Tasks group
+  const tasksContentH = orderedTasks.length * CARD_H + (orderedTasks.length - 1) * ROW_GAP
+  const tasksGroupH = GROUP_PAD_TOP + tasksContentH + GROUP_PAD_BOTTOM
+
+  // Center all columns vertically based on max total height
+  const maxHeight = Math.max(col0TotalH, rolesGroupH, tasksGroupH)
+
+  const col0StartY = (maxHeight - col0TotalH) / 2
+  const col1StartY = (maxHeight - rolesGroupH) / 2
+  const col2StartY = (maxHeight - tasksGroupH) / 2
+
+  /* ── Group background nodes ── */
+  nodes.push({
+    id: 'group-people',
+    type: 'groupLabel',
+    position: { x: col0X, y: col0StartY },
+    data: { label: 'People', width: groupWidth, height: peopleGroupH, color: 'rgba(124, 58, 237, 0.03)' },
+    selectable: false,
+    draggable: false,
+    zIndex: -1,
+  })
+
+  nodes.push({
+    id: 'group-agents',
+    type: 'groupLabel',
+    position: { x: col0X, y: col0StartY + agentsGroupY },
+    data: { label: 'Agents', width: groupWidth, height: agentsGroupH, color: 'rgba(8, 145, 178, 0.03)' },
+    selectable: false,
+    draggable: false,
+    zIndex: -1,
+  })
+
+  nodes.push({
+    id: 'group-roles',
+    type: 'groupLabel',
+    position: { x: col1X, y: col1StartY },
+    data: { label: 'Roles', width: groupWidth, height: rolesGroupH, color: 'rgba(29, 78, 216, 0.03)' },
+    selectable: false,
+    draggable: false,
+    zIndex: -1,
+  })
+
+  nodes.push({
+    id: 'group-tasks',
+    type: 'groupLabel',
+    position: { x: col2X, y: col2StartY },
+    data: { label: 'Tasks', width: groupWidth, height: tasksGroupH, color: 'rgba(22, 163, 106, 0.03)' },
+    selectable: false,
+    draggable: false,
+    zIndex: -1,
+  })
+
+  /* ── People nodes (column 0, top group) ── */
+  people.forEach((m, i) => {
     nodes.push({
       id: `member-${m.id}`,
       type: 'orgNode',
-      position: { x: col0X, y: col0StartY + i * (CARD_H + ROW_GAP) },
+      position: {
+        x: col0X + GROUP_PAD_X,
+        y: col0StartY + GROUP_PAD_TOP + i * (CARD_H + ROW_GAP),
+      },
       data: {
         name: m.name,
-        type: nodeType,
+        type: 'person' as const,
+        capabilities: m.capabilities,
+      },
+    })
+  })
+
+  /* ── Agent nodes (column 0, bottom group) ── */
+  agents.forEach((m, i) => {
+    nodes.push({
+      id: `member-${m.id}`,
+      type: 'orgNode',
+      position: {
+        x: col0X + GROUP_PAD_X,
+        y: col0StartY + agentsGroupY + GROUP_PAD_TOP + i * (CARD_H + ROW_GAP),
+      },
+      data: {
+        name: m.name,
+        type: 'agent' as const,
         avatar: m.avatarSeed,
         capabilities: m.capabilities,
       },
     })
   })
 
-  // Column 1: Roles
+  /* ── Role nodes (column 1) ── */
   orderedRoles.forEach((role, i) => {
     nodes.push({
       id: `role-${role.id}`,
       type: 'orgNode',
-      position: { x: col1X, y: col1StartY + i * (CARD_H + ROW_GAP) },
+      position: {
+        x: col1X + GROUP_PAD_X,
+        y: col1StartY + GROUP_PAD_TOP + i * (CARD_H + ROW_GAP),
+      },
       data: {
         name: role.title,
         type: 'role' as const,
@@ -144,12 +260,15 @@ function buildGraph(
     })
   })
 
-  // Column 2: Tasks
+  /* ── Task nodes (column 2) ── */
   orderedTasks.forEach((task, i) => {
     nodes.push({
       id: `task-${task.id}`,
       type: 'orgNode',
-      position: { x: col2X, y: col2StartY + i * (CARD_H + ROW_GAP) },
+      position: {
+        x: col2X + GROUP_PAD_X,
+        y: col2StartY + GROUP_PAD_TOP + i * (CARD_H + ROW_GAP),
+      },
       data: {
         name: task.name,
         type: 'task' as const,
@@ -158,7 +277,7 @@ function buildGraph(
     })
   })
 
-  // Edges: Members → Roles
+  /* ── Edges: Members -> Roles ── */
   for (const a of assignments) {
     edges.push({
       id: `e-member-role-${a.memberId}-${a.roleId}`,
@@ -170,7 +289,7 @@ function buildGraph(
     })
   }
 
-  // Edges: Roles → Tasks
+  /* ── Edges: Roles -> Tasks ── */
   for (const role of orderedRoles) {
     const taskIds = roleToTasks.get(role.id) ?? []
     for (const taskId of taskIds) {
