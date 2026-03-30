@@ -1,88 +1,93 @@
 @import 'tailwindcss';
 
-/* ── Design System: Executive Modern ── */
+/* ── Design System: Codex-Minimal ── */
+/* Inspired by Codex (OpenAI) light theme — barely-there UI, maximum content focus */
 
 @theme {
   /* Typography */
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-heading: 'DM Sans', system-ui, -apple-system, sans-serif;
 
-  /* Base palette — clean white with cool undertones */
-  --color-background: #f7f8fa;
+  /* Base palette */
+  --color-background: #ffffff;
   --color-surface: #ffffff;
-  --color-surface-hover: #f3f4f6;
-  --color-surface-active: #e5e7eb;
+  --color-surface-hover: #f9fafb;
+  --color-surface-active: #f3f4f6;
+  --color-surface-raised: #ffffff;
 
   /* Foreground */
   --color-foreground: #111827;
-  --color-foreground-secondary: #4b5563;
-  --color-foreground-muted: #9ca3af;
+  --color-foreground-secondary: #374151;
+  --color-foreground-muted: #6b7280;
+  --color-foreground-subtle: #d1d5db;
 
-  /* Accent — deep indigo (authoritative + trustworthy) */
-  --color-primary: #3730a3;
-  --color-primary-light: #eef2ff;
-  --color-primary-hover: #312e81;
+  /* Accent — kept for non-sidebar usage (buttons, links, etc.) */
+  --color-primary: #1d4ed8;
+  --color-primary-light: #eff6ff;
+  --color-primary-hover: #1e40af;
+  --color-primary-accent: #2563eb;
+  --color-primary-accent-light: #dbeafe;
 
   /* Borders */
-  --color-border: #e5e7eb;
-  --color-border-light: #f3f4f6;
+  --color-border: rgba(0, 0, 0, 0.06);
+  --color-border-light: rgba(0, 0, 0, 0.03);
+  --color-border-strong: rgba(0, 0, 0, 0.1);
 
-  /* Shadows — layered for depth */
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.06);
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-elevated: 0 8px 24px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.04);
-  --shadow-sidebar: 1px 0 0 #e5e7eb;
+  /* Shadows — minimal */
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-elevated: 0 4px 16px rgba(0, 0, 0, 0.06);
+  --shadow-sidebar: none;
 
-  /* Sidebar — refined dark sidebar for authority */
-  --color-sidebar-bg: #1e1b4b;
-  --color-sidebar-hover: rgba(255, 255, 255, 0.06);
-  --color-sidebar-active: rgba(255, 255, 255, 0.12);
-  --color-sidebar-active-text: #ffffff;
-  --color-sidebar-text: rgba(255, 255, 255, 0.7);
-  --color-sidebar-text-muted: rgba(255, 255, 255, 0.4);
-  --color-sidebar-border: rgba(255, 255, 255, 0.08);
+  /* Sidebar */
+  --color-sidebar-bg: rgba(255, 255, 255, 0.65);
+  --color-sidebar-hover: rgba(0, 0, 0, 0.03);
+  --color-sidebar-active: rgba(0, 0, 0, 0.04);
+  --color-sidebar-active-text: #111827;
+  --color-sidebar-text: #6b7280;
+  --color-sidebar-text-muted: #9ca3af;
+  --color-sidebar-border: rgba(0, 0, 0, 0.04);
 
   /* Entity colors */
   --color-human: #6d28d9;
-  --color-human-light: #f3f0ff;
+  --color-human-light: #f5f3ff;
   --color-agent: #0891b2;
   --color-agent-light: #ecfeff;
 
   /* Status */
   --color-status-waiting: #d1d5db;
   --color-status-processing: #f59e0b;
-  --color-status-done: #3730a3;
+  --color-status-done: #10b981;
   --color-status-failed: #ef4444;
+  --color-status-active: #2563eb;
 
   /* Radius */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 
-  /* Legacy aliases (used by unmigrated components) */
+  /* Legacy aliases */
   --color-bg: #ffffff;
   --color-bg-surface: #ffffff;
-  --color-bg-hover: #f3f4f6;
+  --color-bg-hover: #f9fafb;
   --color-bg-card: #e5e7eb;
   --color-ink: #111827;
-  --color-ink-secondary: #4b5563;
-  --color-ink-muted: #9ca3af;
-  --color-accent: #3730a3;
-  --color-accent-light: #eef2ff;
+  --color-ink-secondary: #374151;
+  --color-ink-muted: #6b7280;
+  --color-accent: #1d4ed8;
+  --color-accent-light: #eff6ff;
 }
 
 /* ── Base styles ── */
-/* Note: Tailwind 4 preflight (in @layer base) already resets margin, padding,
-   and box-sizing on *, so no manual reset is needed here. Adding one outside
-   a @layer would override all Tailwind utility classes due to cascade layer
-   precedence rules. */
 
 body {
   font-family: var(--font-sans);
-  background: var(--color-background);
+  background: #fafaf9;
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  font-variant-numeric: tabular-nums;
 }
 
 #root {
@@ -97,11 +102,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: rgba(0, 0, 0, 0.08);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: rgba(0, 0, 0, 0.14);
 }
 
 .sidebar-scroll::-webkit-scrollbar {
@@ -111,11 +116,11 @@ body {
   background: transparent;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(0, 0, 0, 0.05);
   border-radius: 2px;
 }
 .sidebar-scroll::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* ── Chat input ── */
@@ -124,7 +129,7 @@ body {
   display: flex;
   align-items: flex-end;
   background: var(--color-surface);
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 6px 6px 6px 18px;
   border: 1px solid var(--color-border);
   transition:
@@ -132,14 +137,14 @@ body {
     box-shadow 0.15s ease;
 }
 .chat-input-container:focus-within {
-  border-color: #a5b4fc;
-  box-shadow: 0 0 0 3px rgba(55, 48, 163, 0.08);
+  border-color: rgba(29, 78, 216, 0.3);
+  box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.06);
 }
 
 .chat-send-btn {
   width: 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: 8px;
   border: none;
   display: flex;
   align-items: center;
@@ -147,7 +152,7 @@ body {
   transition: background 0.15s ease;
   flex-shrink: 0;
   cursor: default;
-  background: var(--color-border);
+  background: var(--color-surface-active);
   color: var(--color-foreground-muted);
 }
 .chat-send-btn[data-active='true'] {
@@ -156,7 +161,7 @@ body {
   cursor: pointer;
 }
 
-/* ── Content cards (legacy — used by unmigrated pages) ── */
+/* ── Content cards ── */
 
 .content-card {
   background: var(--color-surface);
@@ -164,13 +169,13 @@ body {
   border: 1px solid var(--color-border);
   box-shadow: var(--shadow-card);
   transition:
-    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1),
-    transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 .content-card:hover {
   box-shadow: var(--shadow-card-hover);
-  transform: translateY(-2px);
+  transform: translateY(-1px);
 }
 
 /* ── Back button ── */
@@ -200,6 +205,7 @@ body {
   margin-bottom: 40px;
 }
 .page-header h1 {
+  font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 700;
   color: var(--color-foreground);
@@ -211,14 +217,14 @@ body {
   margin-top: 6px;
 }
 
-/* ── Section label (detail pages) ── */
+/* ── Section label ── */
 
 .section-label {
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 11px;
+  font-weight: 600;
   color: var(--color-foreground-muted);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   margin-bottom: 12px;
 }
 
