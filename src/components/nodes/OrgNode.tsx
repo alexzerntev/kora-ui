@@ -38,11 +38,13 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
         borderRadius: 8,
         border: '1px solid rgba(0,0,0,0.06)',
         boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
-        width: 220,
-        padding: '10px 12px',
+        width: 280,
+        height: 68,
+        padding: '12px 14px',
         display: 'flex',
-        alignItems: 'flex-start',
+        alignItems: 'center',
         gap: hasAvatar ? 10 : 0,
+        overflow: 'hidden',
         fontFamily: "'DM Sans', system-ui, sans-serif",
       }}
     >
@@ -121,11 +123,11 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
             style={{
               display: 'flex',
               gap: 4,
-              flexWrap: 'wrap',
-              marginTop: 5,
+              marginTop: 4,
+              overflow: 'hidden',
             }}
           >
-            {capabilities.slice(0, 3).map((cap) => (
+            {capabilities.slice(0, 2).map((cap) => (
               <span
                 key={cap}
                 style={{
@@ -137,21 +139,27 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
                   borderRadius: 4,
                   lineHeight: 1.3,
                   whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
                 {cap}
               </span>
             ))}
-            {capabilities.length > 3 && (
+            {capabilities.length > 2 && (
               <span
                 style={{
                   fontSize: 10,
+                  fontWeight: 500,
                   color: '#9ca3af',
+                  background: '#f3f4f6',
+                  padding: '2px 6px',
+                  borderRadius: 4,
                   lineHeight: 1.3,
-                  padding: '2px 0',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
-                +{capabilities.length - 3}
+                +{capabilities.length - 2}
               </span>
             )}
           </div>

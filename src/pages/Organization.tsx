@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'react'
+import { useMemo } from 'react'
 import { ReactFlow, Background, Controls, type Node, type Edge } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { OrgNode } from '../components/nodes/OrgNode'
@@ -7,6 +7,7 @@ import type { TeamMember, AgentMember } from '../providers/types'
 import type { Role } from '../providers/types'
 import type { Task } from '../providers/types'
 import type { Assignment } from '../providers/types'
+import { optimizeNodeOrder, type Connection } from '../utils/orgLayout'
 
 /* ------------------------------------------------------------------ */
 /*  Group label node                                                   */
@@ -50,8 +51,8 @@ const nodeTypes = {
 /*  Layout constants                                                   */
 /* ------------------------------------------------------------------ */
 
-const CARD_W = 220
-const CARD_H = 62 // approximate height of OrgNode
+const CARD_W = 280
+const CARD_H = 68
 const COL_GAP = 200 // horizontal gap between columns
 const ROW_GAP = 16 // vertical gap between cards in a column
 const GROUP_PAD_X = 16 // horizontal padding inside group
@@ -76,19 +77,8 @@ function buildGraph(
   const people = team.filter((m) => m.type === 'human')
   const agents = team.filter((m) => m.type === 'agent')
 
-  // Build assignment lookups
-  const memberToRoles = new Map<string, string[]>()
-  const roleToMembers = new Map<string, string[]>()
-  const roleToTasks = new Map<string, string[]>()
-
-  for (const a of assignments) {
-    if (!memberToRoles.has(a.memberId)) memberToRoles.set(a.memberId, [])
-    memberToRoles.get(a.memberId)!.push(a.roleId)
-    if (!roleToMembers.has(a.roleId)) roleToMembers.set(a.roleId, [])
-    roleToMembers.get(a.roleId)!.push(a.memberId)
-  }
-
   // Build role -> task connections based on capabilities
+  const roleToTasks = new Map<string, string[]>()
   for (const role of roles) {
     const allCaps = [...role.requiredCapabilities, ...role.optionalCapabilities]
     const connectedTaskIds: string[] = []
@@ -100,37 +90,36 @@ function buildGraph(
     roleToTasks.set(role.id, connectedTaskIds)
   }
 
-  // Order: all members (people first, agents second) for index map
-  const membersOrdered = [...people, ...agents]
-  const memberIndexMap = new Map<string, number>()
-  membersOrdered.forEach((m, i) => memberIndexMap.set(m.id, i))
+  // Build edge lists for the optimizer
+  const memberToRoleEdges: Connection[] = assignments.map((a) => ({ source: a.memberId, target: a.roleId }))
+  const roleToTaskEdges: Connection[] = []
+  for (const role of roles) {
+    for (const taskId of roleToTasks.get(role.id) ?? []) {
+      roleToTaskEdges.push({ source: role.id, target: taskId })
+    }
+  }
 
-  const orderedRoles = [...roles].sort((a, b) => {
-    const aMembers = roleToMembers.get(a.id) ?? []
-    const bMembers = roleToMembers.get(b.id) ?? []
-    const aAvg =
-      aMembers.length > 0 ? aMembers.reduce((s, id) => s + (memberIndexMap.get(id) ?? 0), 0) / aMembers.length : 0
-    const bAvg =
-      bMembers.length > 0 ? bMembers.reduce((s, id) => s + (memberIndexMap.get(id) ?? 0), 0) / bMembers.length : 0
-    return aAvg - bAvg
-  })
+  // Run barycenter optimization to minimize edge crossings
+  const optimized = optimizeNodeOrder(
+    people.map((m) => m.id),
+    agents.map((m) => m.id),
+    roles.map((r) => r.id),
+    tasks.map((t) => t.id),
+    memberToRoleEdges,
+    roleToTaskEdges,
+  )
 
-  const roleIndexMap = new Map<string, number>()
-  orderedRoles.forEach((r, i) => roleIndexMap.set(r.id, i))
+  // Build lookup maps so we can retrieve full objects by id
+  const peopleById = new Map(people.map((m) => [m.id, m]))
+  const agentsById = new Map(agents.map((m) => [m.id, m]))
+  const rolesById = new Map(roles.map((r) => [r.id, r]))
+  const tasksById = new Map(tasks.map((t) => [t.id, t]))
 
-  const orderedTasks = [...tasks].sort((a, b) => {
-    const aRoles = orderedRoles.filter((r) => {
-      const taskIds = roleToTasks.get(r.id) ?? []
-      return taskIds.includes(a.id)
-    })
-    const bRoles = orderedRoles.filter((r) => {
-      const taskIds = roleToTasks.get(r.id) ?? []
-      return taskIds.includes(b.id)
-    })
-    const aAvg = aRoles.length > 0 ? aRoles.reduce((s, r) => s + (roleIndexMap.get(r.id) ?? 0), 0) / aRoles.length : 0
-    const bAvg = bRoles.length > 0 ? bRoles.reduce((s, r) => s + (roleIndexMap.get(r.id) ?? 0), 0) / bRoles.length : 0
-    return aAvg - bAvg
-  })
+  // Re-order arrays according to optimized ordering
+  const orderedPeople = optimized.people.map((id) => peopleById.get(id)!).filter(Boolean)
+  const orderedAgents = optimized.agents.map((id) => agentsById.get(id)!).filter(Boolean)
+  const orderedRoles = optimized.roles.map((id) => rolesById.get(id)!).filter(Boolean)
+  const orderedTasks = optimized.tasks.map((id) => tasksById.get(id)!).filter(Boolean)
 
   /* ── Column X positions ── */
   const col0X = 0 // People + Agents (stacked)
@@ -141,11 +130,11 @@ function buildGraph(
   const groupWidth = CARD_W + GROUP_PAD_X * 2
 
   // People group
-  const peopleContentH = people.length * CARD_H + (people.length - 1) * ROW_GAP
+  const peopleContentH = orderedPeople.length * CARD_H + (orderedPeople.length - 1) * ROW_GAP
   const peopleGroupH = GROUP_PAD_TOP + peopleContentH + GROUP_PAD_BOTTOM
 
   // Agents group (positioned below people)
-  const agentsContentH = agents.length * CARD_H + (agents.length - 1) * ROW_GAP
+  const agentsContentH = orderedAgents.length * CARD_H + (orderedAgents.length - 1) * ROW_GAP
   const agentsGroupH = GROUP_PAD_TOP + agentsContentH + GROUP_PAD_BOTTOM
   const agentsGroupY = peopleGroupH + GROUP_GAP
 
@@ -209,7 +198,7 @@ function buildGraph(
   })
 
   /* ── People nodes (column 0, top group) ── */
-  people.forEach((m, i) => {
+  orderedPeople.forEach((m, i) => {
     nodes.push({
       id: `member-${m.id}`,
       type: 'orgNode',
@@ -226,7 +215,7 @@ function buildGraph(
   })
 
   /* ── Agent nodes (column 0, bottom group) ── */
-  agents.forEach((m, i) => {
+  orderedAgents.forEach((m, i) => {
     nodes.push({
       id: `member-${m.id}`,
       type: 'orgNode',
@@ -237,7 +226,7 @@ function buildGraph(
       data: {
         name: m.name,
         type: 'agent' as const,
-        avatar: m.avatarSeed,
+        avatar: (m as AgentMember).avatarSeed,
         capabilities: m.capabilities,
       },
     })
@@ -283,9 +272,8 @@ function buildGraph(
       id: `e-member-role-${a.memberId}-${a.roleId}`,
       source: `member-${a.memberId}`,
       target: `role-${a.roleId}`,
-      type: 'default',
-      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
-      data: { activeColor: '#7c3aed' },
+      type: 'step',
+      style: { strokeDasharray: '5 3' },
     })
   }
 
@@ -297,9 +285,8 @@ function buildGraph(
         id: `e-role-task-${role.id}-${taskId}`,
         source: `role-${role.id}`,
         target: `task-${taskId}`,
-        type: 'default',
-        style: { stroke: '#d1d5db', strokeWidth: 1.5 },
-        data: { activeColor: '#1d4ed8' },
+        type: 'step',
+        style: { strokeDasharray: '5 3' },
       })
     }
   }
@@ -317,56 +304,12 @@ export function Organization() {
   const { data: tasks } = useTasks()
   const { data: assignments } = useAssignments()
 
-  const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
-
-  const { nodes, edges: baseEdges } = useMemo(() => {
+  const { nodes, edges } = useMemo(() => {
     if (!team || !roles || !tasks || !assignments) {
       return { nodes: [], edges: [] }
     }
     return buildGraph(team, roles, tasks, assignments)
   }, [team, roles, tasks, assignments])
-
-  const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
-    setHoveredNodeId(node.id)
-  }, [])
-
-  const onNodeMouseLeave = useCallback(() => {
-    setHoveredNodeId(null)
-  }, [])
-
-  // Highlight edges connected to hovered node (2-hop for full chain)
-  const edges = useMemo(() => {
-    if (!hoveredNodeId) return baseEdges
-
-    const connectedEdgeIds = new Set<string>()
-    const connectedNodeIds = new Set<string>([hoveredNodeId])
-
-    // Direct connections
-    baseEdges.forEach((e) => {
-      if (e.source === hoveredNodeId || e.target === hoveredNodeId) {
-        connectedEdgeIds.add(e.id)
-        connectedNodeIds.add(e.source)
-        connectedNodeIds.add(e.target)
-      }
-    })
-
-    // 2nd hop: edges connected to the connected nodes
-    baseEdges.forEach((e) => {
-      if (connectedNodeIds.has(e.source) || connectedNodeIds.has(e.target)) {
-        connectedEdgeIds.add(e.id)
-      }
-    })
-
-    return baseEdges.map((e) => ({
-      ...e,
-      style: connectedEdgeIds.has(e.id)
-        ? {
-            stroke: (e.data as { activeColor?: string })?.activeColor ?? '#7c3aed',
-            strokeWidth: 2.5,
-          }
-        : { stroke: '#efefef', strokeWidth: 1 },
-    }))
-  }, [baseEdges, hoveredNodeId])
 
   if (!team || !roles || !tasks || !assignments) {
     return (
@@ -426,8 +369,6 @@ export function Organization() {
           nodesDraggable
           nodesConnectable={false}
           elementsSelectable
-          onNodeMouseEnter={onNodeMouseEnter}
-          onNodeMouseLeave={onNodeMouseLeave}
         >
           <Background gap={32} size={1} color="#e8e8e8" />
           <Controls
