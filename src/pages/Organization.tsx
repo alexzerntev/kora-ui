@@ -1,504 +1,189 @@
 import { useMemo, useState, useCallback } from 'react'
-import { ReactFlow, Background, Controls, type Node, type Edge, Handle, Position } from '@xyflow/react'
+import { ReactFlow, Background, Controls, type Node, type Edge } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { TEAM, TYPE_COLORS } from '../data/team'
-import { ROLES } from '../data/roles'
-import { TASKS } from '../data/tasks'
-import { ASSIGNMENTS } from '../data/assignments'
-import type { TeamMember, AgentMember } from '../data/team'
-import { Avatar } from '../components/Avatar'
-import { HiUser } from 'react-icons/hi2'
-import { RiRobot2Fill } from 'react-icons/ri'
-
-/* ------------------------------------------------------------------ */
-/*  Person/Agent Card Node                                             */
-/* ------------------------------------------------------------------ */
-
-function MemberNode({ data }: { data: { member: TeamMember | AgentMember } }) {
-  const { member } = data
-  const isHuman = member.type === 'human'
-  const colors = TYPE_COLORS[member.type]
-
-  return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 16,
-        width: 180,
-        height: 210,
-        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-        display: 'flex',
-        flexDirection: 'column' as const,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-      {/* Avatar area */}
-      <div
-        style={{
-          background: colors.light,
-          height: 100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '14px 14px 0 0',
-          margin: 4,
-          borderBottomLeftRadius: 10,
-          borderBottomRightRadius: 10,
-        }}
-      >
-        {isHuman ? (
-          <span
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 14,
-              background: 'rgba(255,255,255,0.7)',
-              border: `1.5px solid ${colors.dark}20`,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 18,
-              fontWeight: 700,
-              color: colors.dark,
-            }}
-          >
-            {member.name
-              .split(' ')
-              .map((n) => n[0])
-              .join('')}
-          </span>
-        ) : (
-          <Avatar seed={(member as AgentMember).avatarSeed} size={64} />
-        )}
-      </div>
-
-      {/* Info */}
-      <div style={{ padding: '10px 14px 14px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)' }}>{member.name}</span>
-          <span
-            style={{
-              width: 16,
-              height: 16,
-              borderRadius: '50%',
-              background: colors.dark,
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontSize: 8,
-              flexShrink: 0,
-            }}
-          >
-            {isHuman ? <HiUser /> : <RiRobot2Fill />}
-          </span>
-        </div>
-        <div style={{ fontSize: 11, color: 'var(--color-ink-secondary)' }}>{member.role}</div>
-        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 8 }}>
-          {member.capabilities.slice(0, 2).map((cap) => (
-            <span
-              key={cap}
-              style={{
-                fontSize: 10,
-                fontWeight: 500,
-                color: colors.dark,
-                background: colors.light,
-                padding: '2px 6px',
-                borderRadius: 5,
-              }}
-            >
-              {cap}
-            </span>
-          ))}
-          {member.capabilities.length > 2 && (
-            <span style={{ fontSize: 10, color: 'var(--color-ink-muted)' }}>+{member.capabilities.length - 2}</span>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Group Node (container for people or agents)                        */
-/* ------------------------------------------------------------------ */
-
-function GroupNode({ data }: { data: { label: string; count: number; color: string } }) {
-  return (
-    <div
-      style={{
-        width: '100%',
-        height: '100%',
-        background: '#fafaf9',
-        borderRadius: 16,
-        border: `1px solid #e8e8e6`,
-      }}
-    >
-      <div
-        style={{
-          padding: '10px 16px',
-          fontSize: 12,
-          fontWeight: 700,
-          color: data.color,
-          textTransform: 'uppercase',
-          letterSpacing: '0.06em',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-        }}
-      >
-        {data.label}
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 600,
-            color: 'var(--color-ink-muted)',
-            background: '#fff',
-            padding: '1px 7px',
-            borderRadius: 8,
-          }}
-        >
-          {data.count}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Role Node                                                          */
-/* ------------------------------------------------------------------ */
-
-function RoleNode({ data }: { data: { title: string; name: string; aiEligible: boolean; capabilities: string[] } }) {
-  return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 12,
-        border: '1.5px solid #7c3aed',
-        padding: '12px 14px',
-        width: 160,
-        height: 100,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        textAlign: 'center',
-      }}
-    >
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginBottom: 3 }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)' }}>{data.title}</div>
-        {data.aiEligible && (
-          <span
-            style={{
-              fontSize: 9,
-              fontWeight: 600,
-              color: '#0891b2',
-              background: '#ecfeff',
-              padding: '1px 5px',
-              borderRadius: 3,
-            }}
-          >
-            AI
-          </span>
-        )}
-      </div>
-      <div
-        style={{
-          fontSize: 10,
-          color: 'var(--color-ink-muted)',
-          fontFamily: 'ui-monospace, Consolas, monospace',
-          marginBottom: 6,
-        }}
-      >
-        {data.name}
-      </div>
-      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
-        {data.capabilities.slice(0, 2).map((cap) => (
-          <span
-            key={cap}
-            style={{
-              fontSize: 9,
-              fontWeight: 500,
-              color: '#7c3aed',
-              background: '#f5f3ff',
-              padding: '1px 5px',
-              borderRadius: 4,
-            }}
-          >
-            {cap}
-          </span>
-        ))}
-      </div>
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-    </div>
-  )
-}
-
-/* ------------------------------------------------------------------ */
-/*  Task Node                                                          */
-/* ------------------------------------------------------------------ */
-
-function TaskNode({ data }: { data: { name: string; description: string } }) {
-  return (
-    <div
-      style={{
-        background: '#fff',
-        borderRadius: 12,
-        border: '1.5px solid #2563eb',
-        padding: '12px 14px',
-        width: 160,
-        height: 100,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        textAlign: 'center',
-      }}
-    >
-      <Handle
-        type="target"
-        position={Position.Top}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-      <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>{data.name}</div>
-      <div
-        style={{
-          fontSize: 10,
-          color: 'var(--color-ink-muted)',
-          lineHeight: 1.4,
-          overflow: 'hidden',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical' as const,
-        }}
-      >
-        {data.description}
-      </div>
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-    </div>
-  )
-}
+import { OrgNode } from '../components/nodes/OrgNode'
+import { useTeam, useRoles, useTasks, useAssignments } from '../providers/hooks'
+import type { TeamMember, AgentMember } from '../providers/types'
+import type { Role } from '../providers/types'
+import type { Task } from '../providers/types'
+import type { Assignment } from '../providers/types'
 
 const nodeTypes = {
-  member: MemberNode,
-  group: GroupNode,
-  role: RoleNode,
-  task: TaskNode,
+  orgNode: OrgNode,
 }
 
 /* ------------------------------------------------------------------ */
-/*  Build the graph                                                    */
+/*  Layout constants                                                   */
 /* ------------------------------------------------------------------ */
 
-function buildGraph() {
+const CARD_W = 220
+const CARD_H = 62 // approximate height of OrgNode
+const COL_GAP = 200 // horizontal gap between columns
+const ROW_GAP = 16 // vertical gap between cards in a column
+
+/* ------------------------------------------------------------------ */
+/*  Build the horizontal org graph                                     */
+/* ------------------------------------------------------------------ */
+
+function buildGraph(
+  team: (TeamMember | AgentMember)[],
+  roles: Role[],
+  tasks: Task[],
+  assignments: Assignment[],
+): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = []
   const edges: Edge[] = []
 
-  const people = TEAM.filter((m) => m.type === 'human')
-  const agents = TEAM.filter((m) => m.type === 'agent')
+  // Column 0: People & Agents (combined, people first)
+  const people = team.filter((m) => m.type === 'human')
+  const agents = team.filter((m) => m.type === 'agent')
+  const membersOrdered = [...people, ...agents]
 
-  const cardW = 190
-  const cardH = 210
-  const gapX = 20
-  const padding = 20
-  const headerH = 40
-  const gapY = 100
+  // Build assignment lookups
+  const memberToRoles = new Map<string, string[]>()
+  const roleToMembers = new Map<string, string[]>()
+  const roleToTasks = new Map<string, string[]>()
 
-  const peopleGroupW = people.length * (cardW + gapX) - gapX + padding * 2
-  const peopleGroupH = cardH + headerH + padding
-  const agentsGroupW = agents.length * (cardW + gapX) - gapX + padding * 2
-  const agentsGroupH = cardH + headerH + padding
+  for (const a of assignments) {
+    if (!memberToRoles.has(a.memberId)) memberToRoles.set(a.memberId, [])
+    memberToRoles.get(a.memberId)!.push(a.roleId)
+    if (!roleToMembers.has(a.roleId)) roleToMembers.set(a.roleId, [])
+    roleToMembers.get(a.roleId)!.push(a.memberId)
+  }
 
-  const groupGap = 60
-  const agentsStartX = peopleGroupW + groupGap
+  // Build role → task connections based on capabilities
+  for (const role of roles) {
+    const allCaps = [...role.requiredCapabilities, ...role.optionalCapabilities]
+    const connectedTaskIds: string[] = []
+    for (const task of tasks) {
+      if (allCaps.includes(task.name)) {
+        connectedTaskIds.push(task.id)
+      }
+    }
+    roleToTasks.set(role.id, connectedTaskIds)
+  }
 
-  // People group
-  nodes.push({
-    id: 'group-people',
-    type: 'group',
-    position: { x: 0, y: 0 },
-    style: { width: peopleGroupW, height: peopleGroupH },
-    data: { label: 'People', count: people.length, color: '#7c3aed' },
+  // Order roles to minimize edge crossings with members
+  const memberIndexMap = new Map<string, number>()
+  membersOrdered.forEach((m, i) => memberIndexMap.set(m.id, i))
+
+  const orderedRoles = [...roles].sort((a, b) => {
+    const aMembers = roleToMembers.get(a.id) ?? []
+    const bMembers = roleToMembers.get(b.id) ?? []
+    const aAvg =
+      aMembers.length > 0 ? aMembers.reduce((s, id) => s + (memberIndexMap.get(id) ?? 0), 0) / aMembers.length : 0
+    const bAvg =
+      bMembers.length > 0 ? bMembers.reduce((s, id) => s + (memberIndexMap.get(id) ?? 0), 0) / bMembers.length : 0
+    return aAvg - bAvg
   })
 
-  // People cards inside group
-  people.forEach((m, i) => {
+  // Order tasks to minimize edge crossings with roles
+  const roleIndexMap = new Map<string, number>()
+  orderedRoles.forEach((r, i) => roleIndexMap.set(r.id, i))
+
+  const orderedTasks = [...tasks].sort((a, b) => {
+    const aRoles = orderedRoles.filter((r) => {
+      const taskIds = roleToTasks.get(r.id) ?? []
+      return taskIds.includes(a.id)
+    })
+    const bRoles = orderedRoles.filter((r) => {
+      const taskIds = roleToTasks.get(r.id) ?? []
+      return taskIds.includes(b.id)
+    })
+    const aAvg = aRoles.length > 0 ? aRoles.reduce((s, r) => s + (roleIndexMap.get(r.id) ?? 0), 0) / aRoles.length : 0
+    const bAvg = bRoles.length > 0 ? bRoles.reduce((s, r) => s + (roleIndexMap.get(r.id) ?? 0), 0) / bRoles.length : 0
+    return aAvg - bAvg
+  })
+
+  // Compute column heights to center vertically
+  const col0Count = membersOrdered.length
+  const col1Count = orderedRoles.length
+  const col2Count = orderedTasks.length
+
+  const col0Height = col0Count * CARD_H + (col0Count - 1) * ROW_GAP
+  const col1Height = col1Count * CARD_H + (col1Count - 1) * ROW_GAP
+  const col2Height = col2Count * CARD_H + (col2Count - 1) * ROW_GAP
+
+  const maxHeight = Math.max(col0Height, col1Height, col2Height)
+
+  const col0StartY = (maxHeight - col0Height) / 2
+  const col1StartY = (maxHeight - col1Height) / 2
+  const col2StartY = (maxHeight - col2Height) / 2
+
+  const col0X = 0
+  const col1X = CARD_W + COL_GAP
+  const col2X = 2 * (CARD_W + COL_GAP)
+
+  // Column 0: Members
+  membersOrdered.forEach((m, i) => {
+    const nodeType: 'person' | 'agent' = m.type === 'human' ? 'person' : 'agent'
     nodes.push({
       id: `member-${m.id}`,
-      type: 'member',
-      position: { x: padding + i * (cardW + gapX), y: headerH },
-      parentId: 'group-people',
-      extent: 'parent' as const,
-      data: { member: m },
+      type: 'orgNode',
+      position: { x: col0X, y: col0StartY + i * (CARD_H + ROW_GAP) },
+      data: {
+        name: m.name,
+        type: nodeType,
+        avatar: m.avatarSeed,
+        capabilities: m.capabilities,
+      },
     })
   })
 
-  // Agents group
-  nodes.push({
-    id: 'group-agents',
-    type: 'group',
-    position: { x: agentsStartX, y: 0 },
-    style: { width: agentsGroupW, height: agentsGroupH },
-    data: { label: 'Agents', count: agents.length, color: '#0891b2' },
-  })
-
-  // Agent cards inside group
-  agents.forEach((m, i) => {
-    nodes.push({
-      id: `member-${m.id}`,
-      type: 'member',
-      position: { x: padding + i * (cardW + gapX), y: headerH },
-      parentId: 'group-agents',
-      extent: 'parent' as const,
-      data: { member: m },
-    })
-  })
-
-  // Order roles by assigned member position to minimize crossings
-  const totalWidth = agentsStartX + agentsGroupW
-  const roleGap = 20
-  const roleNodeW = 160
-  const roleNodeH = 100
-
-  const memberXMap: Record<string, number> = {}
-  people.forEach((m, i) => {
-    memberXMap[m.id] = i * (cardW + gapX)
-  })
-  agents.forEach((m, i) => {
-    memberXMap[m.id] = agentsStartX + i * (cardW + gapX)
-  })
-
-  const orderedRoles = [...ROLES].sort((a, b) => {
-    const aAssign = ASSIGNMENTS.find((x) => x.roleId === a.id)
-    const bAssign = ASSIGNMENTS.find((x) => x.roleId === b.id)
-    const aX = aAssign ? (memberXMap[aAssign.memberId] ?? 0) : 0
-    const bX = bAssign ? (memberXMap[bAssign.memberId] ?? 0) : 0
-    return aX - bX
-  })
-
-  // Roles group
-  const rolesGroupW = orderedRoles.length * (roleNodeW + roleGap) - roleGap + padding * 2
-  const rolesGroupH = roleNodeH + headerH + padding
-  const rolesGroupX = (totalWidth - rolesGroupW) / 2
-  const rolesGroupY = Math.max(peopleGroupH, agentsGroupH) + gapY
-
-  nodes.push({
-    id: 'group-roles',
-    type: 'group',
-    position: { x: rolesGroupX, y: rolesGroupY },
-    style: { width: rolesGroupW, height: rolesGroupH },
-    data: { label: 'Roles', count: ROLES.length, color: '#7c3aed' },
-  })
-
+  // Column 1: Roles
   orderedRoles.forEach((role, i) => {
     nodes.push({
       id: `role-${role.id}`,
-      type: 'role',
-      position: { x: padding + i * (roleNodeW + roleGap), y: headerH },
-      parentId: 'group-roles',
-      extent: 'parent' as const,
+      type: 'orgNode',
+      position: { x: col1X, y: col1StartY + i * (CARD_H + ROW_GAP) },
       data: {
-        title: role.title,
-        name: role.name,
-        aiEligible: role.aiEligible,
+        name: role.title,
+        type: 'role' as const,
         capabilities: role.requiredCapabilities,
       },
     })
-
-    const assignedIds = ASSIGNMENTS.filter((a) => a.roleId === role.id).map((a) => a.memberId)
-    assignedIds.forEach((memberId) => {
-      edges.push({
-        id: `e-${role.id}-${memberId}`,
-        source: `member-${memberId}`,
-        target: `role-${role.id}`,
-        style: { stroke: '#e5e5e5', strokeWidth: 1.5 },
-        data: { activeColor: '#7c3aed' },
-        type: 'default',
-      })
-    })
   })
 
-  // Order tasks to minimize crossings
-  const taskGap = 20
-  const taskNodeW = 160
-  const taskNodeH = 100
-
-  const roleXMap: Record<string, number> = {}
-  orderedRoles.forEach((role, i) => {
-    roleXMap[role.id] = padding + i * (roleNodeW + roleGap)
-  })
-
-  const orderedTasks = [...TASKS].sort((a, b) => {
-    const aRoles = orderedRoles.filter(
-      (r) => r.requiredCapabilities.includes(a.name) || r.optionalCapabilities.includes(a.name),
-    )
-    const bRoles = orderedRoles.filter(
-      (r) => r.requiredCapabilities.includes(b.name) || r.optionalCapabilities.includes(b.name),
-    )
-    const aAvgX = aRoles.length > 0 ? aRoles.reduce((sum, r) => sum + (roleXMap[r.id] ?? 0), 0) / aRoles.length : 0
-    const bAvgX = bRoles.length > 0 ? bRoles.reduce((sum, r) => sum + (roleXMap[r.id] ?? 0), 0) / bRoles.length : 0
-    return aAvgX - bAvgX
-  })
-
-  // Tasks group
-  const tasksGroupW = orderedTasks.length * (taskNodeW + taskGap) - taskGap + padding * 2
-  const tasksGroupH = taskNodeH + headerH + padding
-  const tasksGroupX = (totalWidth - tasksGroupW) / 2
-  const tasksGroupY = rolesGroupY + rolesGroupH + gapY
-
-  nodes.push({
-    id: 'group-tasks',
-    type: 'group',
-    position: { x: tasksGroupX, y: tasksGroupY },
-    style: { width: tasksGroupW, height: tasksGroupH },
-    data: { label: 'Tasks', count: TASKS.length, color: '#2563eb' },
-  })
-
+  // Column 2: Tasks
   orderedTasks.forEach((task, i) => {
     nodes.push({
       id: `task-${task.id}`,
-      type: 'task',
-      position: { x: padding + i * (taskNodeW + taskGap), y: headerH },
-      parentId: 'group-tasks',
-      extent: 'parent' as const,
-      data: { name: task.name, description: task.description },
+      type: 'orgNode',
+      position: { x: col2X, y: col2StartY + i * (CARD_H + ROW_GAP) },
+      data: {
+        name: task.name,
+        type: 'task' as const,
+        capabilities: task.refs,
+      },
     })
   })
 
-  // Connect roles to tasks
-  orderedRoles.forEach((role) => {
-    orderedTasks.forEach((task) => {
-      const taskCap = task.name
-      if (role.requiredCapabilities.includes(taskCap) || role.optionalCapabilities.includes(taskCap)) {
-        edges.push({
-          id: `e-role-task-${role.id}-${task.id}`,
-          source: `role-${role.id}`,
-          target: `task-${task.id}`,
-          style: { stroke: '#e5e5e5', strokeWidth: 1.5 },
-          data: { activeColor: '#2563eb' },
-          type: 'default',
-        })
-      }
+  // Edges: Members → Roles
+  for (const a of assignments) {
+    edges.push({
+      id: `e-member-role-${a.memberId}-${a.roleId}`,
+      source: `member-${a.memberId}`,
+      target: `role-${a.roleId}`,
+      type: 'default',
+      style: { stroke: '#d1d5db', strokeWidth: 1.5 },
+      data: { activeColor: '#7c3aed' },
     })
-  })
+  }
+
+  // Edges: Roles → Tasks
+  for (const role of orderedRoles) {
+    const taskIds = roleToTasks.get(role.id) ?? []
+    for (const taskId of taskIds) {
+      edges.push({
+        id: `e-role-task-${role.id}-${taskId}`,
+        source: `role-${role.id}`,
+        target: `task-${taskId}`,
+        type: 'default',
+        style: { stroke: '#d1d5db', strokeWidth: 1.5 },
+        data: { activeColor: '#1d4ed8' },
+      })
+    }
+  }
 
   return { nodes, edges }
 }
@@ -508,25 +193,32 @@ function buildGraph() {
 /* ------------------------------------------------------------------ */
 
 export function Organization() {
-  const { nodes, edges: baseEdges } = useMemo(() => buildGraph(), [])
+  const { data: team } = useTeam()
+  const { data: roles } = useRoles()
+  const { data: tasks } = useTasks()
+  const { data: assignments } = useAssignments()
+
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
 
-  const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
-    // Only highlight for member, role, and task nodes (not groups)
-    if (node.type === 'member' || node.type === 'role' || node.type === 'task') {
-      setHoveredNodeId(node.id)
+  const { nodes, edges: baseEdges } = useMemo(() => {
+    if (!team || !roles || !tasks || !assignments) {
+      return { nodes: [], edges: [] }
     }
+    return buildGraph(team, roles, tasks, assignments)
+  }, [team, roles, tasks, assignments])
+
+  const onNodeMouseEnter = useCallback((_: React.MouseEvent, node: Node) => {
+    setHoveredNodeId(node.id)
   }, [])
 
   const onNodeMouseLeave = useCallback(() => {
     setHoveredNodeId(null)
   }, [])
 
-  // Compute which edges to highlight
+  // Highlight edges connected to hovered node (2-hop for full chain)
   const edges = useMemo(() => {
     if (!hoveredNodeId) return baseEdges
 
-    // Find all edges connected to the hovered node
     const connectedEdgeIds = new Set<string>()
     const connectedNodeIds = new Set<string>([hoveredNodeId])
 
@@ -539,7 +231,7 @@ export function Organization() {
       }
     })
 
-    // Also highlight edges connected to the connected nodes (2 hops for full chain)
+    // 2nd hop: edges connected to the connected nodes
     baseEdges.forEach((e) => {
       if (connectedNodeIds.has(e.source) || connectedNodeIds.has(e.target)) {
         connectedEdgeIds.add(e.id)
@@ -549,10 +241,30 @@ export function Organization() {
     return baseEdges.map((e) => ({
       ...e,
       style: connectedEdgeIds.has(e.id)
-        ? { stroke: (e.data as { activeColor: string })?.activeColor ?? '#7c3aed', strokeWidth: 2.5 }
+        ? {
+            stroke: (e.data as { activeColor?: string })?.activeColor ?? '#7c3aed',
+            strokeWidth: 2.5,
+          }
         : { stroke: '#efefef', strokeWidth: 1 },
     }))
   }, [baseEdges, hoveredNodeId])
+
+  if (!team || !roles || !tasks || !assignments) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flex: 1,
+          color: '#6b7280',
+          fontSize: 14,
+        }}
+      >
+        Loading...
+      </div>
+    )
+  }
 
   return (
     <div

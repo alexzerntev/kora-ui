@@ -1,22 +1,29 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useLocation } from 'react-router-dom'
-import { HiUsers } from 'react-icons/hi2'
 import {
   TbRoute,
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
   TbSettings,
   TbSitemap,
-  TbLayoutDashboard,
   TbBuildingCommunity,
+  TbPlus,
+  TbMessage,
 } from 'react-icons/tb'
 
 const NAV_ITEMS = [
-  { to: '/dashboard', icon: TbLayoutDashboard, label: 'Dashboard' },
+  { to: '/chat', icon: TbPlus, label: 'New Chat' },
   { to: '/processes', icon: TbRoute, label: 'Processes' },
-  { to: '/team', icon: HiUsers, label: 'Team' },
   { to: '/organization', icon: TbSitemap, label: 'Organization' },
   { to: '/admin', icon: TbBuildingCommunity, label: 'Administration' },
+]
+
+const RECENT_CHATS = [
+  { id: 'c1', title: 'Set up onboarding workflow' },
+  { id: 'c2', title: 'Add QA agent to team' },
+  { id: 'c3', title: 'Review task dependencies' },
+  { id: 'c4', title: 'Configure Slack connector' },
+  { id: 'c5', title: 'Sprint planning automation' },
 ]
 
 function SidebarNavItem({
@@ -78,9 +85,8 @@ export function Layout() {
 
   const isChat = location.pathname === '/chat' || location.pathname.startsWith('/chat/')
   const isWorkflowDetail = /^\/processes\/\w+/.test(location.pathname)
-  const isTeam = location.pathname === '/team'
   const isOrganization = location.pathname === '/organization'
-  const isFullBleed = isChat || isWorkflowDetail || isTeam || isOrganization
+  const isFullBleed = isChat || isWorkflowDetail || isOrganization
   const sidebarWidth = collapsed ? 56 : 220
 
   return (
@@ -159,8 +165,83 @@ export function Layout() {
           </div>
         </div>
 
-        {/* Spacer */}
-        <div style={{ flex: 1 }} />
+        {/* Divider */}
+        <div
+          style={{
+            height: 1,
+            background: 'rgba(0, 0, 0, 0.06)',
+            margin: collapsed ? '6px 8px' : '6px 14px',
+            flexShrink: 0,
+          }}
+        />
+
+        {/* Chat section */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column' as const,
+            overflow: 'hidden',
+            padding: collapsed ? '4px 8px' : '4px 10px',
+          }}
+        >
+          {/* Recent chats */}
+          <div
+            className="sidebar-scroll"
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              display: 'flex',
+              flexDirection: 'column' as const,
+              gap: 1,
+              marginTop: 6,
+            }}
+          >
+            {RECENT_CHATS.map((chat) => {
+              const chatActive = location.pathname === `/chat/${chat.id}`
+              return (
+                <NavLink
+                  key={chat.id}
+                  to={`/chat/${chat.id}`}
+                  title={collapsed ? chat.title : undefined}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: collapsed ? 'center' : undefined,
+                    padding: collapsed ? '7px 0' : '7px 12px',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    fontWeight: chatActive ? 500 : 400,
+                    color: chatActive ? '#111827' : '#9ca3af',
+                    background: chatActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                    transition: 'all 0.12s ease',
+                    textDecoration: 'none',
+                    letterSpacing: '-0.01em',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!chatActive) {
+                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)'
+                      e.currentTarget.style.color = '#6b7280'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!chatActive) {
+                      e.currentTarget.style.background = 'transparent'
+                      e.currentTarget.style.color = '#9ca3af'
+                    }
+                  }}
+                >
+                  {collapsed ? (
+                    <TbMessage size={16} strokeWidth={1.7} />
+                  ) : (
+                    <span className="truncate">{chat.title}</span>
+                  )}
+                </NavLink>
+              )
+            })}
+          </div>
+        </div>
 
         {/* Bottom: Settings + Collapse */}
         <div
