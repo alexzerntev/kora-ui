@@ -19,12 +19,5 @@ export function Avatar({ seed, size = 110 }: AvatarProps) {
     return avatar.toDataUri()
   }, [seed, size])
 
-  return (
-    <img
-      src={svg}
-      alt={seed}
-      width={size}
-      height={size}
-    />
-  )
+  return <img src={svg} alt={seed} width={size} height={size} />
 }

@@ -6,33 +6,30 @@ import { Avatar } from '../components/Avatar'
 
 function WorkflowCard({ workflow }: { workflow: Workflow }) {
   const navigate = useNavigate()
-  const doneCount = workflow.tasks.filter((t) => t.status === 'done').length
-  const runningCount = workflow.tasks.filter((t) => t.status === 'running').length
-  const totalCount = workflow.tasks.length
+  const doneCount = workflow.nodes.filter((n) => n.status === 'done').length
+  const runningCount = workflow.nodes.filter((n) => n.status === 'running').length
+  const totalCount = workflow.nodes.length
 
-  // Unique assignees
-  const assignees = workflow.tasks.reduce((acc, t) => {
-    if (!acc.find((a) => a.id === t.assigneeId)) {
-      acc.push({ id: t.assigneeId, seed: t.assigneeSeed, name: t.assigneeName })
-    }
-    return acc
-  }, [] as { id: string; seed: string; name: string }[])
+  // Unique assignees (from task nodes only)
+  const assignees = workflow.nodes
+    .filter((n) => n.kind === 'task' && n.assigneeId)
+    .reduce(
+      (acc, n) => {
+        if (!acc.find((a) => a.id === n.assigneeId)) {
+          acc.push({ id: n.assigneeId!, seed: n.assigneeSeed!, name: n.assigneeName! })
+        }
+        return acc
+      },
+      [] as { id: string; seed: string; name: string }[],
+    )
 
   return (
-    <div
-      onClick={() => navigate(`/processes/${workflow.id}`)}
-      className="content-card"
-      style={{ padding: 24 }}
-    >
+    <div onClick={() => navigate(`/processes/${workflow.id}`)} className="content-card" style={{ padding: 24 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
         <div>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>
-            {workflow.name}
-          </h3>
-          <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>
-            {workflow.description}
-          </p>
+          <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>{workflow.name}</h3>
+          <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{workflow.description}</p>
         </div>
         <TbArrowsShuffle size={20} style={{ color: 'var(--color-ink-muted)', flexShrink: 0, marginTop: 2 }} />
       </div>
@@ -44,19 +41,19 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
             {doneCount}/{totalCount} tasks complete
           </span>
           {runningCount > 0 && (
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#b45309' }}>
-              {runningCount} running
-            </span>
+            <span style={{ fontSize: 11, fontWeight: 600, color: '#b45309' }}>{runningCount} running</span>
           )}
         </div>
         <div style={{ height: 4, background: 'var(--color-bg-hover)', borderRadius: 2, overflow: 'hidden' }}>
-          <div style={{
-            height: '100%',
-            width: `${(doneCount / totalCount) * 100}%`,
-            background: 'var(--color-status-done)',
-            borderRadius: 2,
-            transition: 'width 0.3s ease',
-          }} />
+          <div
+            style={{
+              height: '100%',
+              width: `${(doneCount / totalCount) * 100}%`,
+              background: 'var(--color-status-done)',
+              borderRadius: 2,
+              transition: 'width 0.3s ease',
+            }}
+          />
         </div>
       </div>
 
@@ -84,10 +81,16 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
           ))}
         </div>
 
-        <span style={{
-          fontSize: 12, fontWeight: 600, color: 'var(--color-ink-muted)',
-          background: 'var(--color-bg-hover)', padding: '4px 12px', borderRadius: 20,
-        }}>
+        <span
+          style={{
+            fontSize: 12,
+            fontWeight: 600,
+            color: 'var(--color-ink-muted)',
+            background: 'var(--color-bg-hover)',
+            padding: '4px 12px',
+            borderRadius: 20,
+          }}
+        >
           {totalCount} tasks
         </span>
       </div>

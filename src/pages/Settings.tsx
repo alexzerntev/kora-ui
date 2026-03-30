@@ -1,5 +1,5 @@
 import { PROJECT } from '../data/project.ts'
-import { TbTool, TbClock, TbNetwork, TbCheck, TbX, TbInfoCircle } from 'react-icons/tb'
+import { TbTool, TbClock, TbNetwork, TbCheck, TbX, TbInfoCircle, TbCpu } from 'react-icons/tb'
 
 const mono = 'ui-monospace, Consolas, monospace'
 
@@ -14,22 +14,24 @@ function SectionHeading({ icon, title }: { icon: React.ReactNode; title: string 
 
 function FieldRow({ label, value, mono: useMono }: { label: string; value: React.ReactNode; mono?: boolean }) {
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: '12px 0',
-      borderBottom: '1px solid var(--color-border-light)',
-    }}>
-      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink-secondary)' }}>
-        {label}
-      </span>
-      <span style={{
-        fontSize: 13,
-        fontWeight: 600,
-        color: 'var(--color-ink)',
-        fontFamily: useMono ? mono : 'inherit',
-      }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 0',
+        borderBottom: '1px solid var(--color-border-light)',
+      }}
+    >
+      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink-secondary)' }}>{label}</span>
+      <span
+        style={{
+          fontSize: 13,
+          fontWeight: 600,
+          color: 'var(--color-ink)',
+          fontFamily: useMono ? mono : 'inherit',
+        }}
+      >
         {value}
       </span>
     </div>
@@ -38,16 +40,18 @@ function FieldRow({ label, value, mono: useMono }: { label: string; value: React
 
 function ToolPill({ name }: { name: string }) {
   return (
-    <span style={{
-      fontSize: 12,
-      fontWeight: 600,
-      fontFamily: mono,
-      color: 'var(--color-ink-secondary)',
-      background: 'var(--color-bg-hover)',
-      padding: '4px 12px',
-      borderRadius: 8,
-      border: '1px solid var(--color-border-light)',
-    }}>
+    <span
+      style={{
+        fontSize: 12,
+        fontWeight: 600,
+        fontFamily: mono,
+        color: 'var(--color-ink-secondary)',
+        background: 'var(--color-bg-hover)',
+        padding: '4px 12px',
+        borderRadius: 8,
+        border: '1px solid var(--color-border-light)',
+      }}
+    >
       {name}
     </span>
   )
@@ -56,37 +60,41 @@ function ToolPill({ name }: { name: string }) {
 function EgressRow({ rule, isLast }: { rule: { action: 'allow' | 'deny'; target: string }; isLast: boolean }) {
   const isAllow = rule.action === 'allow'
   return (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 10,
-      padding: '10px 0',
-      borderBottom: isLast ? 'none' : '1px solid var(--color-border-light)',
-    }}>
-      <span style={{
-        width: 22,
-        height: 22,
-        borderRadius: '50%',
-        background: isAllow ? '#ecfdf5' : '#fef2f2',
-        color: isAllow ? 'var(--color-status-done)' : 'var(--color-status-failed)',
-        display: 'inline-flex',
+    <div
+      style={{
+        display: 'flex',
         alignItems: 'center',
-        justifyContent: 'center',
-        flexShrink: 0,
-        fontSize: 13,
-      }}>
+        gap: 10,
+        padding: '10px 0',
+        borderBottom: isLast ? 'none' : '1px solid var(--color-border-light)',
+      }}
+    >
+      <span
+        style={{
+          width: 22,
+          height: 22,
+          borderRadius: '50%',
+          background: isAllow ? '#ecfdf5' : '#fef2f2',
+          color: isAllow ? 'var(--color-status-done)' : 'var(--color-status-failed)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          fontSize: 13,
+        }}
+      >
         {isAllow ? <TbCheck /> : <TbX />}
       </span>
-      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: mono, color: 'var(--color-ink)' }}>
-        {rule.target}
-      </span>
-      <span style={{
-        marginLeft: 'auto',
-        fontSize: 11,
-        fontWeight: 600,
-        textTransform: 'uppercase',
-        color: isAllow ? 'var(--color-status-done)' : 'var(--color-status-failed)',
-      }}>
+      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: mono, color: 'var(--color-ink)' }}>{rule.target}</span>
+      <span
+        style={{
+          marginLeft: 'auto',
+          fontSize: 11,
+          fontWeight: 600,
+          textTransform: 'uppercase',
+          color: isAllow ? 'var(--color-status-done)' : 'var(--color-status-failed)',
+        }}
+      >
         {rule.action}
       </span>
     </div>
@@ -114,18 +122,16 @@ export function Settings() {
         <div className="content-card" style={{ cursor: 'default', padding: '4px 24px' }}>
           <FieldRow label="Project Name" value={name} mono />
           <FieldRow label="Scope ID" value={scopeId} mono />
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 6,
-            padding: '12px 0',
-          }}>
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink-secondary)' }}>
-              Description
-            </span>
-            <span style={{ fontSize: 13, color: 'var(--color-ink)', lineHeight: 1.6 }}>
-              {description}
-            </span>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6,
+              padding: '12px 0',
+            }}
+          >
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink-secondary)' }}>Description</span>
+            <span style={{ fontSize: 13, color: 'var(--color-ink)', lineHeight: 1.6 }}>{description}</span>
           </div>
         </div>
       </section>
@@ -152,31 +158,52 @@ export function Settings() {
         </div>
       </section>
 
+      {/* Model Profiles */}
+      <section style={{ marginBottom: 36 }}>
+        <SectionHeading icon={<TbCpu size={17} />} title="Model Profiles" />
+        <div className="content-card" style={{ cursor: 'default', padding: '4px 24px' }}>
+          <FieldRow label="Default Profile" value="standard" mono />
+          <FieldRow label="Model" value="claude-sonnet-4-5" mono />
+          <FieldRow label="Max Tokens" value="4096" mono />
+          <FieldRow label="Temperature" value="0.7" mono />
+        </div>
+      </section>
+
       {/* Sandbox Network */}
       <section style={{ marginBottom: 36 }}>
         <SectionHeading icon={<TbNetwork size={17} />} title="Sandbox Network" />
         <div className="content-card" style={{ cursor: 'default', padding: '4px 24px' }}>
+          <FieldRow label="Inherit Managed" value={network.inheritManaged ? 'Yes' : 'No'} />
           <FieldRow
-            label="Inherit Managed"
-            value={network.inheritManaged ? 'Yes' : 'No'}
+            label="Default Action"
+            value={
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  color: network.defaultAction === 'allow' ? 'var(--color-status-done)' : 'var(--color-status-failed)',
+                  background: network.defaultAction === 'allow' ? '#ecfdf5' : '#fef2f2',
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                }}
+              >
+                {network.defaultAction}
+              </span>
+            }
           />
-          <FieldRow label="Default Action" value={
-            <span style={{
-              fontSize: 11,
-              fontWeight: 700,
-              textTransform: 'uppercase',
-              color: network.defaultAction === 'allow' ? 'var(--color-status-done)' : 'var(--color-status-failed)',
-              background: network.defaultAction === 'allow' ? '#ecfdf5' : '#fef2f2',
-              padding: '3px 10px',
-              borderRadius: 6,
-            }}>
-              {network.defaultAction}
-            </span>
-          } />
 
           {/* Egress Rules sub-section */}
           <div style={{ padding: '14px 0 4px' }}>
-            <span style={{ fontSize: 12, fontWeight: 650, color: 'var(--color-ink-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span
+              style={{
+                fontSize: 12,
+                fontWeight: 650,
+                color: 'var(--color-ink-muted)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+              }}
+            >
               Egress Rules
             </span>
           </div>

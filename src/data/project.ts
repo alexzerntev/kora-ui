@@ -39,7 +39,8 @@ export interface Project {
 export const PROJECT: Project = {
   name: 'acme-workflows',
   scopeId: 'org_acme',
-  description: 'End-to-end workflow automation for Acme Corp — research, reporting, client onboarding, and outreach pipelines.',
+  description:
+    'End-to-end workflow automation for Acme Corp — research, reporting, client onboarding, and outreach pipelines.',
   machineExecution: {
     defaults: {
       tools: {

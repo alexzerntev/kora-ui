@@ -462,3 +462,12 @@ body {
 .edge-pulse {
   animation: edge-pulse 2s linear infinite;
 }
+
+/* ── ReactFlow node overrides ── */
+
+.react-flow__node {
+  border: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}

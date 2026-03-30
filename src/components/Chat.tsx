@@ -49,8 +49,7 @@ export function Chat() {
           ...prev,
           {
             role: 'assistant',
-            content:
-              "I'll add a new research analyst agent to your team. Here's your updated roster:",
+            content: "I'll add a new research analyst agent to your team. Here's your updated roster:",
           },
         ])
         setArtifactTabs(['team'])
@@ -64,22 +63,16 @@ export function Chat() {
           ...prev,
           {
             role: 'assistant',
-            content:
-              "Great \u2014 I'll wire up a workflow for that. Watch it come together:",
+            content: "Great \u2014 I'll wire up a workflow for that. Watch it come together:",
           },
         ])
-        setArtifactTabs((prev) =>
-          prev.includes('workflow') ? prev : [...prev, 'workflow'],
-        )
+        setArtifactTabs((prev) => (prev.includes('workflow') ? prev : [...prev, 'workflow']))
         setActiveTab('workflow')
       }, 1200)
     } else {
       setTimeout(() => {
         setIsTyping(false)
-        setMessages((prev) => [
-          ...prev,
-          { role: 'assistant', content: "Got it! I'll work on that." },
-        ])
+        setMessages((prev) => [...prev, { role: 'assistant', content: "Got it! I'll work on that." }])
       }, 800)
     }
   }
@@ -188,13 +181,7 @@ export function Chat() {
                     maxWidth: '85%',
                   }}
                 >
-                  <div
-                    className={
-                      msg.role === 'user'
-                        ? 'chat-bubble-user'
-                        : 'chat-bubble-assistant'
-                    }
-                  >
+                  <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}>
                     {msg.content}
                   </div>
                 </div>
@@ -202,10 +189,7 @@ export function Chat() {
 
               {isTyping && (
                 <div style={{ alignSelf: 'flex-start' }}>
-                  <div
-                    className="chat-bubble-assistant"
-                    style={{ display: 'flex', gap: 4, padding: '12px 16px' }}
-                  >
+                  <div className="chat-bubble-assistant" style={{ display: 'flex', gap: 4, padding: '12px 16px' }}>
                     <span className="typing-dot" />
                     <span className="typing-dot" style={{ animationDelay: '0.15s' }} />
                     <span className="typing-dot" style={{ animationDelay: '0.3s' }} />
@@ -248,14 +232,11 @@ export function Chat() {
                   transition: 'font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
-                {hasInteracted
-                  ? "Hi! I'm your Offload assistant."
-                  : 'What would you like to automate?'}
+                {hasInteracted ? "Hi! I'm your Offload assistant." : 'What would you like to automate?'}
               </h1>
               {!hasInteracted && (
                 <p style={{ fontSize: 15, color: '#999', lineHeight: 1.7, marginTop: 8 }}>
-                  I can set up workflows, create tasks, add team members, and
-                  build connectors to your tools.
+                  I can set up workflows, create tasks, add team members, and build connectors to your tools.
                 </p>
               )}
             </div>
@@ -282,11 +263,7 @@ export function Chat() {
                   fontFamily: 'inherit',
                 }}
               />
-              <button
-                className="chat-send-btn"
-                data-active={message.trim() ? 'true' : 'false'}
-                onClick={handleSend}
-              >
+              <button className="chat-send-btn" data-active={message.trim() ? 'true' : 'false'} onClick={handleSend}>
                 <TbArrowUp size={16} strokeWidth={2.5} />
               </button>
             </div>

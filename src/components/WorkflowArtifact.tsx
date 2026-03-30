@@ -10,8 +10,8 @@ import {
   ConnectionLineType,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { DeskNode } from './DeskNode'
-import { WorkflowEdge } from './WorkflowEdge'
+import { DeskNode } from './nodes/DeskNode'
+import { WorkflowEdge } from './nodes/WorkflowEdge'
 
 const nodeTypes = { desk: DeskNode }
 const edgeTypes = { workflow: WorkflowEdge }

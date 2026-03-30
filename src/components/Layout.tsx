@@ -2,19 +2,23 @@ import { useState } from 'react'
 import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { HiUsers } from 'react-icons/hi2'
 import {
-  TbLayoutList,
   TbRoute,
   TbMessage,
   TbPlus,
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
   TbSettings,
+  TbSitemap,
+  TbLayoutDashboard,
+  TbBuildingCommunity,
 } from 'react-icons/tb'
 
 const WORKSPACE_NAV = [
+  { to: '/dashboard', icon: <TbLayoutDashboard size={18} />, label: 'Dashboard' },
   { to: '/processes', icon: <TbRoute size={18} />, label: 'Processes' },
-  { to: '/team', icon: <HiUsers size={18} />, label: 'Organization' },
-  { to: '/tasks', icon: <TbLayoutList size={18} />, label: 'Tasks' },
+  { to: '/team', icon: <HiUsers size={18} />, label: 'Team' },
+  { to: '/organization', icon: <TbSitemap size={18} />, label: 'Organization' },
+  { to: '/admin', icon: <TbBuildingCommunity size={18} />, label: 'Administration' },
 ]
 
 const RECENT_CHATS = [
@@ -33,7 +37,8 @@ export function Layout() {
   const isChat = location.pathname === '/chat' || location.pathname.startsWith('/chat/')
   const isWorkflowDetail = /^\/processes\/\w+/.test(location.pathname)
   const isTeam = location.pathname === '/team'
-  const isFullBleed = isChat || isWorkflowDetail || isTeam
+  const isOrganization = location.pathname === '/organization'
+  const isFullBleed = isChat || isWorkflowDetail || isTeam || isOrganization
   const sidebarWidth = collapsed ? 56 : 252
 
   return (
@@ -65,7 +70,7 @@ export function Layout() {
         >
           {!collapsed && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden' }}>
-              <div className="sidebar-logo">O</div>
+              <div className="sidebar-logo">K</div>
               <span
                 style={{
                   fontSize: 15,
@@ -75,7 +80,7 @@ export function Layout() {
                   whiteSpace: 'nowrap',
                 }}
               >
-                Offload
+                Kora
               </span>
             </div>
           )}
@@ -84,11 +89,7 @@ export function Layout() {
             className="sidebar-toggle"
             title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {collapsed ? (
-              <TbLayoutSidebarLeftExpand size={18} />
-            ) : (
-              <TbLayoutSidebarLeftCollapse size={18} />
-            )}
+            {collapsed ? <TbLayoutSidebarLeftExpand size={18} /> : <TbLayoutSidebarLeftCollapse size={18} />}
           </button>
         </div>
 
@@ -149,7 +150,11 @@ export function Layout() {
           </button>
 
           {/* Recent chats */}
-          {!collapsed && <div className="sidebar-section-label" style={{ marginTop: 16 }}>Recent</div>}
+          {!collapsed && (
+            <div className="sidebar-section-label" style={{ marginTop: 16 }}>
+              Recent
+            </div>
+          )}
 
           <div
             style={{

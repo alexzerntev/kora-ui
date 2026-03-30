@@ -88,9 +88,7 @@ function MiniCard({
       }}
     >
       {/* Speech bubble */}
-      {speechBubble && (
-        <SpeechBubble text={speechBubble} position={isNew ? 'top-right' : 'top'} />
-      )}
+      {speechBubble && <SpeechBubble text={speechBubble} position={isNew ? 'top-right' : 'top'} />}
 
       {/* New badge */}
       {isNew && (
@@ -133,9 +131,7 @@ function MiniCard({
       {/* Info */}
       <div style={{ padding: '14px 18px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink)' }}>
-            {member.name}
-          </h3>
+          <h3 style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-ink)' }}>{member.name}</h3>
           <span
             style={{
               width: 20,
@@ -273,18 +269,10 @@ export function TeamArtifact() {
         }}
       >
         {agents.map((m) => (
-          <MiniCard
-            key={m.id}
-            member={m}
-            speechBubble={showWelcome ? 'Hey! Welcome to the team!' : undefined}
-          />
+          <MiniCard key={m.id} member={m} speechBubble={showWelcome ? 'Hey! Welcome to the team!' : undefined} />
         ))}
         {showNewMember && (
-          <MiniCard
-            member={NEW_AGENT}
-            isNew
-            speechBubble={showThanks ? 'Thanks! Excited to be here!' : undefined}
-          />
+          <MiniCard member={NEW_AGENT} isNew speechBubble={showThanks ? 'Thanks! Excited to be here!' : undefined} />
         )}
       </div>
     </div>
