@@ -1,8 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { TEAM } from '../data/team'
-import { ROLES } from '../data/roles'
-import { TASKS } from '../data/tasks'
-import { WORKFLOWS } from '../data/workflows'
+import { useProcesses, useTeam, useRoles, useTasks } from '../providers'
 import {
   TbRoute,
   TbUsers,
@@ -296,10 +293,24 @@ function ProcessRow({
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const people = TEAM.filter((m) => m.type === 'human')
-  const agents = TEAM.filter((m) => m.type === 'agent')
-  const runningProcesses = WORKFLOWS.filter((w) => w.nodes.some((n) => n.status === 'running'))
-  const busyMembers = TEAM.filter((m) => m.status === 'busy')
+  const { data: team, loading: teamLoading } = useTeam()
+  const { data: workflows, loading: workflowsLoading } = useProcesses()
+  const { data: roles, loading: rolesLoading } = useRoles()
+  const { data: tasks, loading: tasksLoading } = useTasks()
+
+  if (teamLoading || workflowsLoading || rolesLoading || tasksLoading) {
+    return <div style={{ padding: 40, textAlign: 'center', color: '#9ca3af', fontSize: 14 }}>Loading...</div>
+  }
+
+  const teamData = team ?? []
+  const workflowData = workflows ?? []
+  const roleData = roles ?? []
+  const taskData = tasks ?? []
+
+  const people = teamData.filter((m) => m.type === 'human')
+  const agents = teamData.filter((m) => m.type === 'agent')
+  const runningProcesses = workflowData.filter((w) => w.nodes.some((n) => n.status === 'running'))
+  const busyMembers = teamData.filter((m) => m.status === 'busy')
 
   const ACTIVITY_EVENTS: ActivityEvent[] = [
     {
@@ -364,7 +375,7 @@ export function Dashboard() {
       >
         <StatCard
           title="Processes"
-          value={WORKFLOWS.length}
+          value={workflowData.length}
           icon={<TbRoute size={17} />}
           trend="up"
           trendLabel={`${runningProcesses.length} active`}
@@ -391,14 +402,14 @@ export function Dashboard() {
         />
         <StatCard
           title="Roles"
-          value={ROLES.length}
+          value={roleData.length}
           icon={<TbSitemap size={17} />}
           accentColor="#6b7280"
           onClick={() => navigate('/admin')}
         />
         <StatCard
           title="Capabilities"
-          value={TASKS.length}
+          value={taskData.length}
           icon={<TbUsers size={17} />}
           accentColor="#6b7280"
           onClick={() => navigate('/admin')}
