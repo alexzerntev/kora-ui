@@ -1,7 +1,12 @@
 import { useState, useMemo } from 'react'
 import { useAllRuns } from '../providers/hooks'
 import type { ProcessRun, RunStatus } from '../providers/types'
-import { TbCircleFilled, TbCircleCheck, TbCircleX, TbPlayerPause, TbChevronLeft, TbChevronRight } from 'react-icons/tb'
+import { FilterChips } from '../components/shared/FilterChips'
+import { DataTable } from '../components/shared/DataTable'
+import type { Column } from '../components/shared/DataTable'
+import { Pagination } from '../components/shared/Pagination'
+import { StatusBadge } from '../components/shared/StatusBadge'
+import { StatusIcon } from '../components/shared/StatusIcon'
 
 const PAGE_SIZE = 10
 
@@ -13,14 +18,11 @@ const STATUS_FILTERS: { label: string; value: RunStatus | 'all' }[] = [
   { label: 'Paused', value: 'paused' },
 ]
 
-const STATUS_CONFIG: Record<
-  RunStatus,
-  { color: string; bg: string; icon: React.ComponentType<{ size: number; style?: React.CSSProperties }> }
-> = {
-  running: { color: '#10b981', bg: '#ecfdf5', icon: TbCircleFilled },
-  completed: { color: '#10b981', bg: '#ecfdf5', icon: TbCircleCheck },
-  failed: { color: '#ef4444', bg: '#fef2f2', icon: TbCircleX },
-  paused: { color: '#f59e0b', bg: '#fffbeb', icon: TbPlayerPause },
+const STATUS_COLORS: Record<RunStatus, { color: string; bg: string }> = {
+  running: { color: '#10b981', bg: '#ecfdf5' },
+  completed: { color: '#10b981', bg: '#ecfdf5' },
+  failed: { color: '#ef4444', bg: '#fef2f2' },
+  paused: { color: '#f59e0b', bg: '#fffbeb' },
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -50,6 +52,120 @@ function formatDuration(startStr: string, endStr?: string): string {
   return min > 0 ? `${hr}h ${min}m` : `${hr}h`
 }
 
+const COLUMNS: Column<ProcessRun>[] = [
+  {
+    key: 'process',
+    header: 'Process',
+    width: '1fr',
+    render: (run) => {
+      const cfg = STATUS_COLORS[run.status]
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <StatusIcon variant={run.status} size={14} />
+          <span
+            style={{
+              fontSize: 13,
+              fontWeight: 550,
+              color: cfg.color === '#ef4444' ? 'var(--color-foreground)' : 'var(--color-foreground)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {run.workflowName}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    key: 'triggeredBy',
+    header: 'Triggered by',
+    width: '1fr',
+    render: (run) => (
+      <span
+        style={{
+          fontSize: 13,
+          color: 'var(--color-foreground-secondary)',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {run.triggeredBy}
+      </span>
+    ),
+  },
+  {
+    key: 'progress',
+    header: 'Progress',
+    width: '1fr',
+    render: (run) => {
+      const cfg = STATUS_COLORS[run.status]
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div
+            style={{
+              flex: 1,
+              height: 4,
+              background: 'var(--color-surface-active)',
+              borderRadius: 2,
+              overflow: 'hidden',
+              maxWidth: 80,
+            }}
+          >
+            <div
+              style={{
+                height: '100%',
+                width: `${(run.stepsCompleted / run.stepsTotal) * 100}%`,
+                background: cfg.color,
+                borderRadius: 2,
+              }}
+            />
+          </div>
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--color-foreground-muted)',
+              fontVariantNumeric: 'tabular-nums',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {run.stepsCompleted}/{run.stepsTotal}
+          </span>
+        </div>
+      )
+    },
+  },
+  {
+    key: 'started',
+    header: 'Started',
+    width: '100px',
+    render: (run) => (
+      <span style={{ fontSize: 12, color: 'var(--color-foreground-muted)' }}>{formatRelativeTime(run.startedAt)}</span>
+    ),
+  },
+  {
+    key: 'duration',
+    header: 'Duration',
+    width: '90px',
+    render: (run) => (
+      <span style={{ fontSize: 12, color: 'var(--color-foreground-muted)' }}>
+        {formatDuration(run.startedAt, run.completedAt)}
+      </span>
+    ),
+  },
+  {
+    key: 'status',
+    header: 'Status',
+    width: '80px',
+    render: (run) => {
+      const cfg = STATUS_COLORS[run.status]
+      return <StatusBadge status={run.status} color={cfg.color} backgroundColor={cfg.bg} />
+    },
+  },
+]
+
 export function Runs() {
   const { data: runs, loading } = useAllRuns()
   const [statusFilter, setStatusFilter] = useState<RunStatus | 'all'>('all')
@@ -75,10 +191,7 @@ export function Runs() {
     return [...result].sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
   }, [runs, statusFilter, processFilter])
 
-  const totalPages = Math.ceil(filteredRuns.length / PAGE_SIZE)
   const pagedRuns = filteredRuns.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-  const rangeStart = filteredRuns.length === 0 ? 0 : page * PAGE_SIZE + 1
-  const rangeEnd = Math.min((page + 1) * PAGE_SIZE, filteredRuns.length)
 
   // Reset page when filters change
   const handleStatusFilter = (value: RunStatus | 'all') => {
@@ -112,31 +225,7 @@ export function Runs() {
           flexWrap: 'wrap',
         }}
       >
-        {/* Status chips */}
-        <div style={{ display: 'flex', gap: 6 }}>
-          {STATUS_FILTERS.map((f) => (
-            <button
-              key={f.value}
-              onClick={() => handleStatusFilter(f.value)}
-              style={{
-                padding: '5px 14px',
-                borderRadius: 20,
-                border: '1px solid',
-                borderColor: statusFilter === f.value ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.06)',
-                background: statusFilter === f.value ? 'var(--color-foreground)' : 'var(--color-surface)',
-                color: statusFilter === f.value ? '#fff' : 'var(--color-foreground-muted)',
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                transition: 'all 0.15s ease',
-                lineHeight: 1.4,
-              }}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        <FilterChips options={STATUS_FILTERS} value={statusFilter} onChange={handleStatusFilter} />
 
         {/* Process filter dropdown */}
         <select
@@ -181,232 +270,9 @@ export function Runs() {
         </div>
       ) : (
         <>
-          <div
-            style={{
-              background: 'var(--color-surface)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--color-border)',
-              boxShadow: 'var(--shadow-card)',
-              overflow: 'hidden',
-            }}
-          >
-            {/* Table header */}
-            <div
-              style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr 1fr 100px 90px 80px',
-                padding: '10px 20px',
-                borderBottom: '1px solid var(--color-border)',
-                background: 'var(--color-surface-hover)',
-              }}
-            >
-              {['Process', 'Triggered by', 'Progress', 'Started', 'Duration', 'Status'].map((col) => (
-                <span
-                  key={col}
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: 'var(--color-foreground-muted)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                  }}
-                >
-                  {col}
-                </span>
-              ))}
-            </div>
+          <DataTable columns={COLUMNS} data={pagedRuns} onRowClick={handleRowClick} rowKey={(run) => run.id} />
 
-            {/* Rows */}
-            {pagedRuns.map((run) => {
-              const cfg = STATUS_CONFIG[run.status]
-              const StatusIcon = cfg.icon
-              return (
-                <div
-                  key={run.id}
-                  onClick={() => handleRowClick(run)}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1fr 1fr 1fr 100px 90px 80px',
-                    padding: '14px 20px',
-                    borderBottom: '1px solid var(--color-border-light)',
-                    cursor: 'pointer',
-                    transition: 'background 0.1s ease',
-                    alignItems: 'center',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'var(--color-surface-hover)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent'
-                  }}
-                >
-                  {/* Process name + status icon */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
-                    <StatusIcon size={14} style={{ color: cfg.color, flexShrink: 0 }} />
-                    <span
-                      style={{
-                        fontSize: 13,
-                        fontWeight: 550,
-                        color: 'var(--color-foreground)',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {run.workflowName}
-                    </span>
-                  </div>
-
-                  {/* Triggered by */}
-                  <span
-                    style={{
-                      fontSize: 13,
-                      color: 'var(--color-foreground-secondary)',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {run.triggeredBy}
-                  </span>
-
-                  {/* Progress */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div
-                      style={{
-                        flex: 1,
-                        height: 4,
-                        background: 'var(--color-surface-active)',
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        maxWidth: 80,
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: '100%',
-                          width: `${(run.stepsCompleted / run.stepsTotal) * 100}%`,
-                          background: cfg.color,
-                          borderRadius: 2,
-                        }}
-                      />
-                    </div>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: 'var(--color-foreground-muted)',
-                        fontVariantNumeric: 'tabular-nums',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {run.stepsCompleted}/{run.stepsTotal}
-                    </span>
-                  </div>
-
-                  {/* Started */}
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--color-foreground-muted)',
-                    }}
-                  >
-                    {formatRelativeTime(run.startedAt)}
-                  </span>
-
-                  {/* Duration */}
-                  <span
-                    style={{
-                      fontSize: 12,
-                      color: 'var(--color-foreground-muted)',
-                    }}
-                  >
-                    {formatDuration(run.startedAt, run.completedAt)}
-                  </span>
-
-                  {/* Status label */}
-                  <span
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 600,
-                      color: cfg.color,
-                      background: cfg.bg,
-                      padding: '3px 9px',
-                      borderRadius: 6,
-                      textTransform: 'capitalize',
-                      textAlign: 'center',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {run.status}
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-
-          {/* Pagination */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginTop: 16,
-              padding: '0 4px',
-            }}
-          >
-            <span
-              style={{
-                fontSize: 12,
-                color: 'var(--color-foreground-muted)',
-              }}
-            >
-              Showing {rangeStart}-{rangeEnd} of {filteredRuns.length}
-            </span>
-
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button
-                disabled={page === 0}
-                onClick={() => setPage((p) => Math.max(0, p - 1))}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  border: '1px solid var(--color-border)',
-                  background: 'var(--color-surface)',
-                  color: page === 0 ? 'var(--color-foreground-subtle)' : 'var(--color-foreground-secondary)',
-                  cursor: page === 0 ? 'default' : 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.12s ease',
-                }}
-              >
-                <TbChevronLeft size={16} />
-              </button>
-              <button
-                disabled={page >= totalPages - 1}
-                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 32,
-                  height: 32,
-                  borderRadius: 8,
-                  border: '1px solid var(--color-border)',
-                  background: 'var(--color-surface)',
-                  color:
-                    page >= totalPages - 1 ? 'var(--color-foreground-subtle)' : 'var(--color-foreground-secondary)',
-                  cursor: page >= totalPages - 1 ? 'default' : 'pointer',
-                  fontFamily: 'inherit',
-                  transition: 'all 0.12s ease',
-                }}
-              >
-                <TbChevronRight size={16} />
-              </button>
-            </div>
-          </div>
+          <Pagination page={page} pageSize={PAGE_SIZE} total={filteredRuns.length} onPageChange={setPage} />
         </>
       )}
     </div>
