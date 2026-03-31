@@ -11,8 +11,9 @@ Kora UI is the frontend for **Kora** — a YAML-based workflow orchestration pla
 1. **UX-first** — Design for user experience. Don't mirror backend entity model 1:1.
 2. **Show don't tell** — Use visual cues (icons, colors, shapes) over text labels where possible.
 3. **Minimal cognitive load** — Each node/card/component should be instantly recognizable by shape and color.
-4. **Clean, modern aesthetic** — Light theme, inspired by Codex/Claude/ChatGPT/Cursor. White backgrounds, subtle borders, clean typography.
+4. **Codex-minimal aesthetic** — Light theme inspired by Codex (OpenAI). Frosted glass sidebar, barely-there UI, maximum content focus.
 5. **No speculative abstractions** — Only build what's needed now. No premature helpers or utilities.
+6. **Design tokens everywhere** — All colors, shadows, borders, radii MUST reference CSS variables from `@theme` in `index.css`. No hardcoded hex colors in components.
 
 ## Stack
 
@@ -20,112 +21,157 @@ Kora UI is the frontend for **Kora** — a YAML-based workflow orchestration pla
 |-------|------|
 | Framework | React 19, TypeScript (strict) |
 | Build | Vite 8 |
-| Styling | Tailwind CSS 4, CSS variables, inline styles |
+| Styling | Tailwind CSS 4 (`@theme` directive), CSS variables, inline styles |
 | Diagrams | ReactFlow (@xyflow/react) with custom nodes/edges |
-| Drag & Drop | dnd-kit (@dnd-kit/core) |
-| Icons | react-icons (Tabler `tb`, Heroicons `hi2`, Remix `ri`) |
+| Icons | react-icons (Tabler `Tb*` — outlined style, consistent stroke) |
 | Avatars | DiceBear (@dicebear/core + @dicebear/collection) |
 | Routing | react-router-dom v7 |
+| Font | DM Sans (loaded via `<link>` in index.html) |
+
+## Design System
+
+### Aesthetic: Codex-Minimal Glassy
+- **Font**: DM Sans — warmer and rounder than Inter, professional but not cold
+- **Background**: Warm off-white `#fafaf9` (body), white `#fff` (surfaces)
+- **Foreground**: `#111827` (primary), `#374151` (secondary), `#6b7280` (muted)
+- **Borders**: `rgba(0,0,0,0.06)` (standard), `rgba(0,0,0,0.03)` (very light)
+- **Shadows**: Barely perceptible — `0 1px 2px rgba(0,0,0,0.03)`
+- **Radius**: 6-12px (avoid large radii — feels less professional)
+- **Sidebar**: Translucent frosted glass — `rgba(255,255,255,0.6)` + `backdrop-filter: blur(20px)`
+- **Hover states**: Subtle background shift `rgba(0,0,0,0.03-0.04)`, smooth 0.12s transitions
+- **Active nav**: Faint background `rgba(0,0,0,0.04)` + darker text `#111827`, no accent bars
+
+### Colors — Use Design Tokens
+All colors MUST use CSS variables defined in `src/index.css` `@theme` block:
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--color-foreground` | `#111827` | Primary text |
+| `--color-foreground-secondary` | `#374151` | Secondary text, labels |
+| `--color-foreground-muted` | `#6b7280` | Muted text, timestamps |
+| `--color-border` | `rgba(0,0,0,0.06)` | Standard borders |
+| `--color-border-light` | `rgba(0,0,0,0.03)` | Very subtle borders |
+| `--color-status-done` | `#10b981` | Completed/success |
+| `--color-status-processing` | `#f59e0b` | In progress/warning |
+| `--color-status-failed` | `#ef4444` | Failed/error |
+| `--color-primary` | `#1d4ed8` | Primary accent (buttons, links) |
+| `--color-human` | `#6d28d9` | Human/person entities |
+| `--color-agent` | `#0891b2` | Agent/AI entities |
+
+**Never hardcode hex colors in components.** Use `var(--color-*)` or `var(--shadow-*)`.
+
+### Tailwind CSS 4 — Important Notes
+- Design tokens are defined in `@theme { }` in `src/index.css`
+- **CRITICAL**: Do NOT add a manual `* { margin: 0; padding: 0; }` CSS reset. Tailwind 4's preflight handles this. Adding one outside `@layer` overrides ALL Tailwind utility classes due to cascade layer precedence.
+- Font is loaded via `<link>` in `index.html`, NOT via `@import` in CSS. CSS `@import url(...)` before `@import "tailwindcss"` breaks Tailwind processing.
+
+## Data Provider Layer
+
+All data access goes through the provider interface. **Never import directly from `src/data/*.ts` in pages/components** (except types).
+
+```
+UI Components (pages)
+    ↓ calls hooks
+React Hooks (useProcesses, useTeam, etc.)
+    ↓ uses context
+DataProvider (React Context)
+    ↓ delegates to
+MockDataProvider (static data from src/data/*.ts)
+```
+
+### Key files:
+- `src/providers/types.ts` — DataProvider interface + entity type exports
+- `src/providers/MockDataProvider.ts` — Mock implementation
+- `src/providers/hooks.ts` — React hooks (useProcesses, useTeam, useRoles, useTasks, useAllRuns, etc.)
+- `src/providers/context.ts` — React context
+- `src/providers/DataContext.tsx` — Provider wrapper component
+
+### Provider methods include:
+- `getWorkflows()`, `getWorkflow(id)` — Process definitions
+- `getTeam()`, `getTeamMember(id)` — People + Agents
+- `getRoles()`, `getTasks()`, `getAssignments()` — Org entities
+- `getAllRuns()`, `getRunsForWorkflow(id)` — Run instances
+- `getProcessRuns()`, `getPendingActions()`, `getActivityFeed()` — Dashboard data
+- `runProcess(id, args?)` — Trigger a process
+- `subscribe(callback)` — Real-time event subscription
+
+### Event system:
+- `DataEvent` type for real-time updates (process.started/completed/failed, task.assigned/completed)
+- MockDataProvider simulates events every 8-15 seconds
+- `useSubscription()` hook for consuming events
 
 ## Architecture
 
-See `ARCHITECTURE.md` for full details. Key points:
-
-- **No backend yet** — All data is mock, defined in `src/data/*.ts`
-- **No state management library** — React useState/useMemo only
-- **No test framework yet** — To be added
-- **CSS pattern** — Mix of CSS classes (for hover/interactive states in `index.css`) + inline styles (for layout/spacing)
-- **ReactFlow custom nodes** — Each Kora node type has its own visual component
-
-## File Structure
+### File Structure
 
 ```
 src/
 ├── components/
-│   ├── nodes/              # ReactFlow custom node components
-│   │   ├── ActivityNode.tsx   # Router + GenericActivityNode + ACTIVITY_CONFIG
-│   │   ├── ServiceNode.tsx    # HTTP/SQL/CLI service nodes (pure icons)
-│   │   ├── ScriptNode.tsx     # Hexagon with code monitor icon
-│   │   ├── DecisionNode.tsx   # Card with mini rule table preview
-│   │   ├── SendNode.tsx       # Card with channel icon (Slack/Email/etc)
-│   │   ├── ReceiveNode.tsx    # Card with inbox icon
-│   │   ├── TimerNode.tsx      # Clock icon with duration
-│   │   ├── CallNode.tsx       # Portal circle with route icon
-│   │   ├── SubprocessNode.tsx # Group container for child nodes
-│   │   ├── TransactionNode.tsx# Group container with compensation
-│   │   ├── DeskNode.tsx       # Task node (assigned/unassigned card)
-│   │   ├── EventNode.tsx      # Start/End event circles
-│   │   ├── GatewayNode.tsx    # Exclusive/Parallel gateway diamonds
-│   │   └── WorkflowEdge.tsx   # Custom edge with idle/active/done + labels
-│   ├── shared/             # Reusable UI components
-│   │   ├── SectionHeader.tsx  # Icon + title + count badge
-│   │   ├── StatCard.tsx       # Stat number card with icon
-│   │   ├── NavItem.tsx        # Sidebar nav item with icon + count
-│   │   └── CategoryContent.tsx# Category detail panel
-│   ├── Layout.tsx          # Main shell: collapsible sidebar + content
-│   ├── Chat.tsx            # Chat interface with artifact panel
-│   ├── Avatar.tsx          # DiceBear avatar wrapper
-│   ├── TeamArtifact.tsx    # Chat artifact: animated team member
-│   └── WorkflowArtifact.tsx# Chat artifact: progressive node reveal
-├── pages/                # Route-level page components
-│   ├── Dashboard.tsx       # Stats overview + activity feed
-│   ├── Workflows.tsx       # Process list with progress bars
-│   ├── WorkflowDetail.tsx  # Full-bleed ReactFlow canvas
-│   ├── Team.tsx            # People + Agents card grid
-│   ├── MemberDetail.tsx    # Person/Agent detail view
-│   ├── Organization.tsx    # ReactFlow org chart (people → roles → tasks)
-│   ├── Administration.tsx  # Structure + Connections category browser
-│   ├── Settings.tsx        # Project manifest editor
-│   └── Tasks.tsx           # Capability card grid
-├── data/                 # Mock data + TypeScript interfaces
-│   ├── team.ts             # TeamMember, AgentMember, TYPE_COLORS
-│   ├── roles.ts            # Role definitions
-│   ├── tasks.ts            # Task/Capability definitions
-│   ├── workflows.ts        # FlowNodeKind, WorkflowNode, Workflow
-│   ├── assignments.ts      # Role → Member mappings
-│   └── project.ts          # Project manifest types + mock data
-├── types/                # Centralized type re-exports
-│   └── index.ts            # Re-exports all entity types from data/
-├── utils/                # Pure utility functions
-│   └── layout.ts           # getReactFlowType, getNodeDimsForNode
-├── index.css             # Global styles, CSS variables, animations
-├── App.tsx               # Router configuration
-└── main.tsx              # Entry point
+│   ├── nodes/                # ReactFlow custom node components (14 files)
+│   ├── shared/               # Reusable UI components
+│   │   ├── FloatingHeader.tsx   # Frosted glass floating header bar
+│   │   ├── CollapsiblePanel.tsx # Animated collapsible panel
+│   │   ├── RunProcessButton.tsx # Run button with expandable args form
+│   │   ├── FilterChips.tsx      # Generic filter pill group
+│   │   ├── DataTable.tsx        # Configurable table with typed columns
+│   │   ├── Pagination.tsx       # Page navigation with prev/next
+│   │   ├── StatusBadge.tsx      # Colored status pill
+│   │   ├── StatusIcon.tsx       # Status indicator icons
+│   │   ├── SectionHeader.tsx    # Icon + title + count badge
+│   │   ├── NavItem.tsx          # Sidebar nav item
+│   │   └── CategoryContent.tsx  # Category detail panel
+│   ├── EntityDetailModal.tsx  # Modal showing full entity data
+│   ├── Layout.tsx             # Main shell: translucent sidebar + content
+│   ├── Chat.tsx               # Chat interface
+│   └── Avatar.tsx             # DiceBear avatar wrapper
+├── pages/
+│   ├── Dashboard.tsx          # Greeting (minimal, to be expanded)
+│   ├── Workflows.tsx          # Process definitions table (DataTable)
+│   ├── WorkflowDetail.tsx     # Process detail: top bar + ReactFlow canvas
+│   ├── Runs.tsx               # All run instances table (DataTable + filters)
+│   ├── Organization.tsx       # ReactFlow org chart (people → roles → tasks)
+│   ├── Administration.tsx     # Structure + Connections category browser
+│   ├── Settings.tsx           # Project manifest editor
+│   ├── MemberDetail.tsx       # Person/Agent detail view
+│   └── Tasks.tsx              # Capability card grid
+├── providers/                 # Data provider layer
+│   ├── types.ts               # DataProvider interface + entity types
+│   ├── MockDataProvider.ts    # Mock implementation
+│   ├── hooks.ts               # React hooks
+│   ├── context.ts             # React context
+│   ├── DataContext.tsx         # Provider wrapper
+│   └── index.ts               # Barrel exports
+├── contexts/
+│   └── OrgHoverContext.ts     # Org chart hover state context
+├── data/                      # Mock data (imported by MockDataProvider only)
+│   ├── team.ts, roles.ts, tasks.ts, workflows.ts, assignments.ts, project.ts
+│   ├── runs.ts                # ProcessRun instances (20 mock runs)
+│   └── activity.ts            # ActivityEntry instances
+├── utils/
+│   ├── layout.ts              # ReactFlow layout helpers
+│   └── orgLayout.ts           # Barycenter edge crossing minimization
+├── index.css                  # Design system tokens (@theme) + global styles
+├── App.tsx                    # Router + DataProviderComponent wrapper
+└── main.tsx                   # Entry point
 ```
 
-## Design System
+### Navigation (sidebar)
+- Assistant → `/chat` (with recent chat sessions below divider)
+- Processes → `/processes`
+- Runs → `/runs`
+- Organization → `/organization`
+- Administration → `/admin`
+- Settings → `/settings`
 
-### Colors
-- **Human (person)**: Purple `#7c3aed` / light `#f5f3ff`
-- **Agent (AI)**: Teal `#0891b2` / light `#ecfeff`
-- **Ink**: `#0d0d0d` (primary), `#666` (secondary), `#a0a0a0` (muted)
-- **Status**: Done `#22c55e`, Processing `#f59e0b`, Failed `#ef4444`
-- **Background**: White `#fff`, Surface `#fff`, Hover `#f9f9f8`
-
-### Node Type Visual Language
-| Node Type | Shape | Color | Distinguisher |
-|-----------|-------|-------|---------------|
-| Start Event | Circle | Green border | Mail/Clock/Play icon |
-| End Event | Circle | Gray border | Flag+Check icon |
-| Task | Card (220px) | Purple border + tab | Avatar area + role pills |
-| Service (HTTP) | Pure icon | Blue | Globe icon |
-| Service (SQL) | Pure icon | Purple | Database icon |
-| Service (CLI) | Pure icon | Green | Terminal+Gear stacked icons |
-| Script | Hexagon | Gray border | Code monitor icon (blue) |
-| Decision | Card | Orange border + tab | Mini rule table preview |
-| Exclusive Gateway | Diamond (SVG) | Blue | X inside |
-| Parallel Gateway | Diamond (SVG) | Blue | + inside |
-| Send | Card | Green border + tab | Channel icon (Slack/Email/etc) |
-| Receive | Card | Teal border + tab | Inbox icon |
-| Timer | Pure icon | Amber | Clock icon |
-| Call Activity | Circle with shadow | Indigo | Route icon |
-| Subprocess | Group container | Indigo border + tab | Contains child nodes |
-| Transaction | Group container | Emerald border + tab | Contains child nodes |
-
-### Card-style nodes have:
-- Colored border around the whole card
-- Type tab (bookmark) above the card with icon + label
-- Content area below
+### Reusable Shared Components
+When building new pages, use these shared components:
+- **DataTable** — for any tabular data (typed columns, row click, hover)
+- **FilterChips** — for status/type filter groups
+- **Pagination** — for paginated lists
+- **StatusBadge** — for colored status pills
+- **StatusIcon** — for status dot/check/x/pause icons
+- **FloatingHeader** — for frosted glass overlay headers (org chart, etc.)
+- **RunProcessButton** — for triggering processes with optional args form
 
 ## Conventions
 
@@ -136,10 +182,11 @@ src/
 - `useMemo` for computed ReactFlow nodes/edges
 - Inline styles for layout, CSS classes for interactive states
 - No `any` types
+- All colors via CSS variables (no hardcoded hex)
 
 ### Naming
-- Components: PascalCase (`DeskNode`, `MemberCard`)
-- Files: PascalCase for components/pages, camelCase for data
+- Components: PascalCase (`DeskNode`, `DataTable`)
+- Files: PascalCase for components/pages, camelCase for data/utils
 - CSS classes: kebab-case (`content-card`, `page-header`)
 - Data constants: SCREAMING_SNAKE (`TEAM`, `ROLES`, `WORKFLOWS`)
 
@@ -148,11 +195,14 @@ src/
 - Handles: `background: 'transparent', border: 'none', width: 1, height: 1`
 - Topological layering for auto-layout
 - Sub-flows use `parentId` + `extent: 'parent'`
-- Edge labels via `foreignObject` in custom edge component
+- Org chart uses barycenter heuristic for edge crossing minimization
+
+### Data Access
+- Pages use hooks from `src/providers/hooks.ts` — NEVER import from `src/data/*.ts` directly
+- Types can be imported from `src/providers/types.ts`
+- Add loading states when using async hooks
 
 ## Verification — Run After Every Change
-
-After any code addition or edit, run all three checks:
 
 ```bash
 npm run check        # runs all three below in sequence
@@ -172,18 +222,15 @@ npm run format       # prettier --write
 
 **All three must pass before considering a change complete.**
 
-## Testing Guidelines (to be implemented)
-
-- Component tests: Verify render output, props, and visual states
-- Data tests: Validate mock data consistency (e.g., all assignment IDs exist in TEAM)
-- Integration tests: Route navigation, ReactFlow node interaction
-- No snapshot tests (too brittle for this codebase)
-
 ## What NOT to Do
 
-- Don't add a state management library (Redux, Zustand) without explicit approval
-- Don't change the color system or design tokens without discussion
+- Don't add a state management library without explicit approval
+- Don't change the design system tokens without discussion
 - Don't add new dependencies without justification
 - Don't refactor working code that isn't being modified
 - Don't add comments to code you didn't write
 - Don't create abstraction layers for one-time patterns
+- Don't hardcode colors — use CSS variables from `@theme`
+- Don't add `* { padding: 0 }` CSS reset — breaks Tailwind 4
+- Don't use `@import url(...)` in CSS before `@import "tailwindcss"`
+- Don't import mock data directly in pages — use provider hooks
