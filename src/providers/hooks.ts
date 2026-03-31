@@ -15,6 +15,12 @@ import type {
   RunLogEntry,
   Draft,
   Release,
+  Decision,
+  Skill,
+  Connector,
+  Operation,
+  McpServer,
+  Template,
 } from './types'
 
 interface QueryResult<T> {
@@ -200,6 +206,36 @@ export function useDrafts(refetchKey?: number): QueryResult<Draft[]> {
 export function useReleases(refetchKey?: number): QueryResult<Release[]> {
   const provider = useDataProvider()
   return useQuery(() => provider.getReleases(), refetchKey)
+}
+
+export function useDecisions(): QueryResult<Decision[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getDecisions())
+}
+
+export function useSkills(): QueryResult<Skill[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getSkills())
+}
+
+export function useConnectors(): QueryResult<Connector[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getConnectors())
+}
+
+export function useOperations(): QueryResult<Operation[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getOperations())
+}
+
+export function useMcpServers(): QueryResult<McpServer[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getMcpServers())
+}
+
+export function useTemplates(): QueryResult<Template[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getTemplates())
 }
 
 /**

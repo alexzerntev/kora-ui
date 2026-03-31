@@ -21,6 +21,7 @@ export type {
 } from '../data/runs'
 export type { ActivityEntry } from '../data/activity'
 export type { Draft, DraftChange, Release, ReleaseChange } from '../data/releases'
+export type { Decision, Skill, Connector, Operation, McpServer, Template } from '../data/admin'
 
 export { TYPE_COLORS } from '../data/team'
 
@@ -33,6 +34,7 @@ import type { Project } from '../data/project'
 import type { ProcessRun, PendingAction, RunLogEntry } from '../data/runs'
 import type { ActivityEntry } from '../data/activity'
 import type { Draft, Release } from '../data/releases'
+import type { Decision, Skill, Connector, Operation, McpServer, Template } from '../data/admin'
 
 /** Real-time events emitted by the data provider */
 export type DataEvent =
@@ -109,6 +111,24 @@ export interface DataProvider {
 
   /** Restore a previous release as active */
   restoreRelease(releaseId: string): Promise<void>
+
+  /** List all decisions */
+  getDecisions(): Promise<Decision[]>
+
+  /** List all skills */
+  getSkills(): Promise<Skill[]>
+
+  /** List all connectors */
+  getConnectors(): Promise<Connector[]>
+
+  /** List all operations */
+  getOperations(): Promise<Operation[]>
+
+  /** List all MCP servers */
+  getMcpServers(): Promise<McpServer[]>
+
+  /** List all templates */
+  getTemplates(): Promise<Template[]>
 
   /** Subscribe to real-time events — returns an unsubscribe function */
   subscribe(callback: (event: DataEvent) => void): () => void

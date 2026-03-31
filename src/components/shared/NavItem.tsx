@@ -1,10 +1,7 @@
 interface NavItemCategory {
   id: string
   title: string
-  count: number
   icon: React.ReactNode
-  color: string
-  bg: string
 }
 
 export function NavItem({
@@ -26,56 +23,39 @@ export function NavItem({
         padding: '8px 12px',
         borderRadius: 8,
         border: 'none',
-        background: selected ? 'var(--color-bg-hover)' : 'transparent',
+        background: selected ? 'var(--color-sidebar-active)' : 'transparent',
         cursor: 'pointer',
         width: '100%',
         textAlign: 'left',
         fontFamily: 'inherit',
-        transition: 'background 0.1s',
+        transition: 'background 0.12s',
       }}
       onMouseEnter={(e) => {
-        if (!selected) e.currentTarget.style.background = 'var(--color-bg-hover)'
+        if (!selected) e.currentTarget.style.background = 'var(--color-sidebar-hover)'
       }}
       onMouseLeave={(e) => {
         if (!selected) e.currentTarget.style.background = 'transparent'
       }}
     >
-      <div
+      <span
         style={{
-          width: 28,
-          height: 28,
-          borderRadius: 7,
-          background: category.bg,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: category.color,
+          color: selected ? 'var(--color-foreground)' : 'var(--color-foreground-muted)',
           flexShrink: 0,
         }}
       >
         {category.icon}
-      </div>
-      <span
-        style={{
-          fontSize: 13,
-          fontWeight: selected ? 650 : 500,
-          color: selected ? 'var(--color-ink)' : 'var(--color-ink-secondary)',
-          flex: 1,
-        }}
-      >
-        {category.title}
       </span>
       <span
         style={{
-          fontSize: 11,
-          fontWeight: 600,
-          color: 'var(--color-ink-muted)',
-          background: selected ? '#fff' : 'var(--color-bg-hover)',
-          padding: '1px 7px',
-          borderRadius: 8,
+          fontSize: 13,
+          fontWeight: selected ? 600 : 500,
+          color: selected ? 'var(--color-sidebar-active-text)' : 'var(--color-foreground-secondary)',
         }}
       >
-        {category.count}
+        {category.title}
       </span>
     </button>
   )

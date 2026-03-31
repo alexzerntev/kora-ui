@@ -8,6 +8,7 @@ import { PROJECT } from '../data/project'
 import { PROCESS_RUNS, PENDING_ACTIONS, RUN_LOGS } from '../data/runs'
 import { ACTIVITY_FEED } from '../data/activity'
 import { DRAFTS, RELEASES } from '../data/releases'
+import { DECISIONS, SKILLS, CONNECTORS, OPERATIONS, MCP_SERVERS, TEMPLATES } from '../data/admin'
 
 const EVENT_TEMPLATES: (() => DataEvent)[] = [
   () => ({
@@ -153,6 +154,30 @@ export class MockDataProvider implements DataProvider {
 
   async restoreRelease(releaseId: string) {
     console.log(`[MockDataProvider] restoreRelease called`, { releaseId })
+  }
+
+  async getDecisions() {
+    return DECISIONS
+  }
+
+  async getSkills() {
+    return SKILLS
+  }
+
+  async getConnectors() {
+    return CONNECTORS
+  }
+
+  async getOperations() {
+    return OPERATIONS
+  }
+
+  async getMcpServers() {
+    return MCP_SERVERS
+  }
+
+  async getTemplates() {
+    return TEMPLATES
   }
 
   subscribe(callback: (event: DataEvent) => void): () => void {

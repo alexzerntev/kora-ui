@@ -18,6 +18,12 @@ export {
   useActivityFeed,
   useDrafts,
   useReleases,
+  useDecisions,
+  useSkills,
+  useConnectors,
+  useOperations,
+  useMcpServers,
+  useTemplates,
   useSubscription,
 } from './hooks'
 export type { DataProvider, DataEvent } from './types'
@@ -49,5 +55,11 @@ export type {
   DraftChange,
   Release,
   ReleaseChange,
+  Decision,
+  Skill,
+  Connector,
+  Operation,
+  McpServer,
+  Template,
 } from './types'
 export { TYPE_COLORS } from './types'

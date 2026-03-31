@@ -12,13 +12,12 @@ import {
   TbPlayerPlay,
   TbPackages,
 } from 'react-icons/tb'
-import { Link } from 'react-router-dom'
 
 const NAV_ITEMS = [
   { to: '/chat', icon: TbEdit, label: 'Assistant' },
+  { to: '/organization', icon: TbSitemap, label: 'Organization' },
   { to: '/processes', icon: TbRoute, label: 'Processes' },
   { to: '/runs', icon: TbPlayerPlay, label: 'Runs' },
-  { to: '/organization', icon: TbSitemap, label: 'Organization' },
   { to: '/admin', icon: TbBuildingCommunity, label: 'Administration' },
   { to: '/releases', icon: TbPackages, label: 'Releases' },
 ]
@@ -328,85 +327,6 @@ export function Layout() {
 
       {/* Main content */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: '#f9fafb' }}>
-        {/* Global release status bar */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            height: 36,
-            padding: '0 16px',
-            background: '#fff',
-            borderBottom: '1px solid rgba(0,0,0,0.06)',
-            flexShrink: 0,
-            fontSize: 12,
-          }}
-        >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: 'var(--color-status-done)',
-                flexShrink: 0,
-              }}
-            />
-            <span
-              style={{
-                fontWeight: 600,
-                color: 'var(--color-foreground)',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Release v5
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                color: 'var(--color-status-done)',
-                background: '#ecfdf5',
-                padding: '1px 7px',
-                borderRadius: 4,
-              }}
-            >
-              active
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <Link
-              to="/releases"
-              style={{
-                color: 'var(--color-primary)',
-                fontWeight: 500,
-                textDecoration: 'none',
-                fontSize: 12,
-              }}
-            >
-              3 drafts pending
-            </Link>
-            <Link
-              to="/releases"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 4,
-                padding: '3px 10px',
-                borderRadius: 6,
-                background: 'var(--color-primary)',
-                color: '#fff',
-                fontSize: 11,
-                fontWeight: 600,
-                textDecoration: 'none',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Publish
-            </Link>
-          </div>
-        </div>
-
         {isFullBleed ? (
           <Outlet />
         ) : (
