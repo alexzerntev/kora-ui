@@ -1,6 +1,6 @@
 import { useNavigate } from 'react-router-dom'
-import { WORKFLOWS } from '../data/workflows'
-import type { Workflow } from '../data/workflows'
+import type { Workflow } from '../providers/types'
+import { useProcesses } from '../providers/hooks'
 import { TbArrowsShuffle } from 'react-icons/tb'
 import { Avatar } from '../components/Avatar'
 
@@ -99,6 +99,8 @@ function WorkflowCard({ workflow }: { workflow: Workflow }) {
 }
 
 export function Workflows() {
+  const { data: workflows, loading } = useProcesses()
+
   return (
     <div style={{ maxWidth: 1100 }}>
       <header className="page-header">
@@ -106,11 +108,15 @@ export function Workflows() {
         <p>Orchestrated flows of work across your team</p>
       </header>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-        {WORKFLOWS.map((w) => (
-          <WorkflowCard key={w.id} workflow={w} />
-        ))}
-      </div>
+      {loading ? (
+        <p style={{ color: 'var(--color-ink-secondary)', padding: 32 }}>Loading processes...</p>
+      ) : (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
+          {(workflows ?? []).map((w) => (
+            <WorkflowCard key={w.id} workflow={w} />
+          ))}
+        </div>
+      )}
     </div>
   )
 }

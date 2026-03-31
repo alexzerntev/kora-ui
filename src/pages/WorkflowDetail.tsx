@@ -7,7 +7,7 @@ import { EventNode } from '../components/nodes/EventNode'
 import { GatewayNode } from '../components/nodes/GatewayNode'
 import { ActivityNode } from '../components/nodes/ActivityNode'
 import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
-import { WORKFLOWS } from '../data/workflows'
+import { useProcess } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
 import { TbArrowLeft } from 'react-icons/tb'
 
@@ -22,7 +22,7 @@ const edgeTypes = { workflow: WorkflowEdge }
 export function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const workflow = WORKFLOWS.find((w) => w.id === id)
+  const { data: workflow, loading } = useProcess(id ?? '')
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const nodes: Node[] = useMemo(() => {
@@ -185,6 +185,10 @@ export function WorkflowDetail() {
       }
     })
   }, [workflow])
+
+  if (loading) {
+    return <p style={{ padding: 32, color: 'var(--color-ink-secondary)' }}>Loading process...</p>
+  }
 
   if (!workflow) {
     return <p style={{ padding: 32, color: 'var(--color-ink-secondary)' }}>Workflow not found.</p>
