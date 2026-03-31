@@ -18,23 +18,14 @@ export function DataTable<T>({ columns, data, onRowClick, rowKey }: DataTablePro
   const gridTemplateColumns = columns.map((col) => col.width ?? '1fr').join(' ')
 
   return (
-    <div
-      style={{
-        background: 'var(--color-surface)',
-        borderRadius: 'var(--radius-lg)',
-        border: '1px solid var(--color-border)',
-        boxShadow: 'var(--shadow-card)',
-        overflow: 'hidden',
-      }}
-    >
+    <div>
       {/* Header */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns,
-          padding: '10px 20px',
-          borderBottom: '1px solid var(--color-border-light)',
-          background: 'rgba(0, 0, 0, 0.015)',
+          padding: '0 4px 10px',
+          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
         }}
       >
         {columns.map((col) => (
@@ -42,10 +33,10 @@ export function DataTable<T>({ columns, data, onRowClick, rowKey }: DataTablePro
             key={col.key}
             style={{
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 500,
               color: 'var(--color-foreground-muted)',
               textTransform: 'uppercase',
-              letterSpacing: '0.05em',
+              letterSpacing: '0.06em',
             }}
           >
             {col.header}
@@ -54,18 +45,22 @@ export function DataTable<T>({ columns, data, onRowClick, rowKey }: DataTablePro
       </div>
 
       {/* Rows */}
-      {data.map((item) => (
+      {data.map((item, index) => (
         <div
           key={rowKey(item)}
           onClick={onRowClick ? () => onRowClick(item) : undefined}
           style={{
             display: 'grid',
             gridTemplateColumns,
-            padding: '14px 20px',
-            borderBottom: '1px solid var(--color-border-light)',
+            padding: '14px 4px',
+            borderBottom: index < data.length - 1 ? '1px solid rgba(0, 0, 0, 0.04)' : 'none',
             cursor: onRowClick ? 'pointer' : 'default',
-            transition: 'background 0.1s ease',
+            transition: 'background 0.15s ease',
             alignItems: 'center',
+            borderRadius: 6,
+            margin: '0 -4px',
+            paddingLeft: 8,
+            paddingRight: 8,
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.background = 'var(--color-surface-hover)'
@@ -75,7 +70,16 @@ export function DataTable<T>({ columns, data, onRowClick, rowKey }: DataTablePro
           }}
         >
           {columns.map((col) => (
-            <div key={col.key}>{col.render(item)}</div>
+            <div
+              key={col.key}
+              style={{
+                fontSize: 13,
+                color: 'var(--color-foreground)',
+                lineHeight: 1.5,
+              }}
+            >
+              {col.render(item)}
+            </div>
           ))}
         </div>
       ))}
