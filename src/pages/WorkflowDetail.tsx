@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { ReactFlow, Background, Controls, type Node, type Edge, ConnectionLineType } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { DeskNode } from '../components/nodes/DeskNode'
@@ -10,8 +10,6 @@ import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
 import { useProcess, useRunProcess, useWorkflowRuns } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
 import { TbArrowLeft, TbCircleCheckFilled, TbCircleXFilled, TbPlayerPauseFilled } from 'react-icons/tb'
-import { FloatingHeader } from '../components/shared/FloatingHeader'
-import { CollapsiblePanel } from '../components/shared/CollapsiblePanel'
 import { RunProcessButton } from '../components/shared/RunProcessButton'
 import type { RunStatus } from '../providers/types'
 
@@ -81,6 +79,7 @@ export function WorkflowDetail() {
   const { data: workflow, loading } = useProcess(id ?? '')
   const { data: runs } = useWorkflowRuns(id ?? '')
   const { run, running } = useRunProcess()
+  const [runsSidebarOpen, setRunsSidebarOpen] = useState(true)
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const nodes: Node[] = useMemo(() => {
@@ -263,189 +262,244 @@ export function WorkflowDetail() {
         flexDirection: 'column',
         flex: 1,
         minHeight: 0,
-        position: 'relative',
       }}
     >
-      <FloatingHeader
-        title={workflow.name}
-        subtitle={workflow.description}
-        left={
-          <button
-            onClick={() => navigate('/processes')}
-            className="back-btn"
-            style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
-          >
-            <TbArrowLeft size={18} />
-          </button>
-        }
-        right={
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-            {isRunning ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
-                  {doneCount}/{totalCount}
-                </span>
-                <div
-                  style={{
-                    width: 80,
-                    height: 4,
-                    background: '#f3f4f6',
-                    borderRadius: 2,
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      height: '100%',
-                      width: `${(doneCount / totalCount) * 100}%`,
-                      background: 'var(--color-status-done)',
-                      borderRadius: 2,
-                    }}
-                  />
-                </div>
-              </div>
-            ) : (
-              <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>
-                {workflow.lastRunAt
-                  ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-                  : 'Never run'}
+      {/* Top bar — in normal document flow */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 16,
+          padding: '10px 20px',
+          background: '#fff',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          flexShrink: 0,
+        }}
+      >
+        <button
+          onClick={() => navigate('/processes')}
+          className="back-btn"
+          style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
+        >
+          <TbArrowLeft size={18} />
+        </button>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h1 style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{workflow.name}</h1>
+          {workflow.description && (
+            <p style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>{workflow.description}</p>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          {isRunning ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
+                {doneCount}/{totalCount}
               </span>
-            )}
-            <RunProcessButton
-              schema={workflow.inputSchema}
-              onRun={(args) => run(workflow.id, args)}
-              disabled={running}
-            />
-          </div>
-        }
-      />
-
-      {runs && runs.length > 0 && (
-        <CollapsiblePanel title="Runs" count={runs.length}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
-            {runs.map((r) => (
               <div
-                key={r.id}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 12,
-                  padding: '8px 10px',
-                  borderRadius: 10,
-                  background: 'rgba(0,0,0,0.02)',
-                  cursor: 'pointer',
-                  transition: 'background 0.15s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.04)'
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(0,0,0,0.02)'
+                  width: 80,
+                  height: 4,
+                  background: '#f3f4f6',
+                  borderRadius: 2,
+                  overflow: 'hidden',
                 }}
               >
-                {statusIcon(r.status)}
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${(doneCount / totalCount) * 100}%`,
+                    background: 'var(--color-status-done)',
+                    borderRadius: 2,
+                  }}
+                />
+              </div>
+            </div>
+          ) : (
+            <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>
+              {workflow.lastRunAt
+                ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                : 'Never run'}
+            </span>
+          )}
+          <RunProcessButton schema={workflow.inputSchema} onRun={(args) => run(workflow.id, args)} disabled={running} />
+        </div>
+      </div>
 
-                {/* Info */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{r.triggeredBy}</span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        fontWeight: 600,
-                        color: statusColor[r.status],
-                        textTransform: 'capitalize',
-                      }}
-                    >
-                      {statusLabel[r.status]}
-                    </span>
-                  </div>
-                  {r.status === 'running' && (
-                    <span style={{ fontSize: 11, color: '#6b7280' }}>Step: {r.currentStep}</span>
-                  )}
-                </div>
-
-                {/* Progress */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280' }}>
-                    {r.stepsCompleted}/{r.stepsTotal}
-                  </span>
-                  <div
+      {/* Content: sidebar + canvas */}
+      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
+        {/* Runs sidebar */}
+        {runs && runs.length > 0 && (
+          <div
+            style={{
+              width: runsSidebarOpen ? 280 : 40,
+              flexShrink: 0,
+              borderRight: '1px solid rgba(0,0,0,0.06)',
+              background: '#fff',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'width 0.2s ease',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Sidebar header */}
+            <button
+              onClick={() => setRunsSidebarOpen(!runsSidebarOpen)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: runsSidebarOpen ? '14px 16px' : '14px 0',
+                justifyContent: runsSidebarOpen ? 'flex-start' : 'center',
+                background: 'none',
+                border: 'none',
+                borderBottom: '1px solid rgba(0,0,0,0.06)',
+                cursor: 'pointer',
+                fontFamily: 'inherit',
+                flexShrink: 0,
+                width: '100%',
+              }}
+            >
+              <svg
+                width="10"
+                height="10"
+                viewBox="0 0 10 10"
+                style={{
+                  transform: runsSidebarOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
+                  transition: 'transform 0.2s ease',
+                  flexShrink: 0,
+                }}
+              >
+                <path d="M2 3L5 6L8 3" stroke="#6b7280" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+              </svg>
+              {runsSidebarOpen && (
+                <>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Runs</span>
+                  <span
                     style={{
-                      width: 48,
-                      height: 4,
+                      fontSize: 10,
+                      fontWeight: 600,
+                      color: '#6b7280',
                       background: '#f3f4f6',
-                      borderRadius: 2,
-                      overflow: 'hidden',
+                      borderRadius: 4,
+                      padding: '1px 6px',
                     }}
                   >
-                    <div
-                      style={{
-                        height: '100%',
-                        width: `${r.progress}%`,
-                        background: statusColor[r.status],
-                        borderRadius: 2,
-                        transition: 'width 0.3s ease',
-                      }}
-                    />
+                    {runs.length}
+                  </span>
+                </>
+              )}
+            </button>
+
+            {/* Run items */}
+            {runsSidebarOpen && (
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: 'auto',
+                  padding: '8px 10px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                }}
+              >
+                {runs.map((r) => (
+                  <div
+                    key={r.id}
+                    style={{
+                      padding: '10px 10px',
+                      borderRadius: 8,
+                      background: 'rgba(0,0,0,0.02)',
+                      cursor: 'pointer',
+                      transition: 'background 0.12s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(0,0,0,0.05)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(0,0,0,0.02)'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      {statusIcon(r.status)}
+                      <span
+                        style={{ fontSize: 12, fontWeight: 600, color: '#111827', flex: 1, minWidth: 0 }}
+                        className="truncate"
+                      >
+                        {r.triggeredBy}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: statusColor[r.status],
+                          textTransform: 'capitalize',
+                        }}
+                      >
+                        {statusLabel[r.status]}
+                      </span>
+                    </div>
+                    {r.status === 'running' && (
+                      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>Step: {r.currentStep}</div>
+                    )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <div
+                        style={{
+                          flex: 1,
+                          height: 3,
+                          background: '#f3f4f6',
+                          borderRadius: 2,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <div
+                          style={{
+                            height: '100%',
+                            width: `${r.progress}%`,
+                            background: statusColor[r.status],
+                            borderRadius: 2,
+                          }}
+                        />
+                      </div>
+                      <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>
+                        {r.stepsCompleted}/{r.stepsTotal}
+                      </span>
+                    </div>
+                    <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 4 }}>{relativeTime(r.startedAt)}</div>
                   </div>
-                </div>
-
-                {/* Time */}
-                <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0, width: 48, textAlign: 'right' }}>
-                  {relativeTime(r.startedAt)}
-                </span>
-
-                {/* View button */}
-                <button
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 600,
-                    color: 'var(--color-primary)',
-                    background: 'var(--color-primary-light)',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '3px 10px',
-                    cursor: 'pointer',
-                    fontFamily: 'inherit',
-                    flexShrink: 0,
-                  }}
-                >
-                  View
-                </button>
+                ))}
               </div>
-            ))}
+            )}
           </div>
-        </CollapsiblePanel>
-      )}
+        )}
 
-      {/* Full-bleed canvas */}
-      <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
-        <ReactFlow
-          nodes={nodes}
-          edges={edges}
-          nodeTypes={nodeTypes}
-          edgeTypes={edgeTypes}
-          fitView
-          fitViewOptions={{ padding: 0.3 }}
-          connectionLineType={ConnectionLineType.Bezier}
-          proOptions={{ hideAttribution: true }}
-          nodesDraggable
-          nodesConnectable={false}
-          elementsSelectable
-        >
-          <Background gap={32} size={1} color="#e8e8e8" />
-          <Controls
-            showInteractive={false}
-            position="bottom-right"
-            style={{
-              borderRadius: 12,
-              border: '1px solid var(--color-border-light)',
-              overflow: 'hidden',
-              background: '#fff',
-            }}
-          />
-        </ReactFlow>
+        {/* ReactFlow canvas */}
+        <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
+          <ReactFlow
+            nodes={nodes}
+            edges={edges}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            fitView
+            fitViewOptions={{ padding: 0.3 }}
+            connectionLineType={ConnectionLineType.Bezier}
+            proOptions={{ hideAttribution: true }}
+            nodesDraggable
+            nodesConnectable={false}
+            elementsSelectable
+          >
+            <Background gap={32} size={1} color="#e8e8e8" />
+            <Controls
+              showInteractive={false}
+              position="bottom-right"
+              style={{
+                borderRadius: 12,
+                border: '1px solid var(--color-border-light)',
+                overflow: 'hidden',
+                background: '#fff',
+              }}
+            />
+          </ReactFlow>
+        </div>
       </div>
     </div>
   )

@@ -76,18 +76,19 @@ export function RunProcessButton({ schema, onRun, disabled }: RunProcessButtonPr
       return
     }
 
-    if (!open) {
-      // If all required fields already have values, run directly
-      const allFilled = schema!.every((f) => !f.required || values[f.name]?.trim())
-      if (allFilled) {
-        onRun(values)
-      } else {
-        setOpen(true)
-      }
+    if (open) {
+      setOpen(false)
+      setSubmitted(false)
       return
     }
 
-    handleSubmit()
+    // If all required fields already have values, run directly
+    const allFilled = schema!.every((f) => !f.required || values[f.name]?.trim())
+    if (allFilled) {
+      onRun(values)
+    } else {
+      setOpen(true)
+    }
   }
 
   const handleSubmit = () => {
