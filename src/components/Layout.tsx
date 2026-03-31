@@ -87,8 +87,9 @@ export function Layout() {
 
   const isChat = location.pathname === '/chat' || location.pathname.startsWith('/chat/')
   const isWorkflowDetail = /^\/processes\/\w+/.test(location.pathname)
+  const isRunDetail = /^\/runs\/[\w-]+$/.test(location.pathname)
   const isOrganization = location.pathname === '/organization'
-  const isFullBleed = isChat || isWorkflowDetail || isOrganization
+  const isFullBleed = isChat || isWorkflowDetail || isRunDetail || isOrganization
   const sidebarWidth = collapsed ? 56 : 220
 
   return (

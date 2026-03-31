@@ -206,7 +206,7 @@ export function Runs() {
   }
 
   const handleRowClick = (run: ProcessRun) => {
-    navigate(`/processes/${run.workflowId}?run=${run.id}`)
+    navigate(`/runs/${run.id}`)
   }
 
   return (

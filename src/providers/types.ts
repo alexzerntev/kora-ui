@@ -10,7 +10,15 @@ export type {
   SandboxNetwork,
   SandboxEgressRule,
 } from '../data/project'
-export type { ProcessRun, RunStatus, NodeRunState, PendingAction, PendingActionType } from '../data/runs'
+export type {
+  ProcessRun,
+  RunStatus,
+  NodeRunState,
+  PendingAction,
+  PendingActionType,
+  RunLogEntry,
+  RunLogEntryType,
+} from '../data/runs'
 export type { ActivityEntry } from '../data/activity'
 
 export { TYPE_COLORS } from '../data/team'
@@ -21,7 +29,7 @@ import type { Task } from '../data/tasks'
 import type { Workflow } from '../data/workflows'
 import type { Assignment } from '../data/assignments'
 import type { Project } from '../data/project'
-import type { ProcessRun, PendingAction } from '../data/runs'
+import type { ProcessRun, PendingAction, RunLogEntry } from '../data/runs'
 import type { ActivityEntry } from '../data/activity'
 
 /** Real-time events emitted by the data provider */
@@ -72,6 +80,9 @@ export interface DataProvider {
 
   /** Get a single run by ID */
   getRun(runId: string): Promise<ProcessRun | undefined>
+
+  /** Get audit log entries for a run */
+  getRunLogs(runId: string): Promise<RunLogEntry[]>
 
   /** List pending actions requiring human input */
   getPendingActions(): Promise<PendingAction[]>

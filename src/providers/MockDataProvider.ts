@@ -5,7 +5,7 @@ import { TASKS } from '../data/tasks'
 import { WORKFLOWS } from '../data/workflows'
 import { ASSIGNMENTS } from '../data/assignments'
 import { PROJECT } from '../data/project'
-import { PROCESS_RUNS, PENDING_ACTIONS } from '../data/runs'
+import { PROCESS_RUNS, PENDING_ACTIONS, RUN_LOGS } from '../data/runs'
 import { ACTIVITY_FEED } from '../data/activity'
 
 const EVENT_TEMPLATES: (() => DataEvent)[] = [
@@ -116,6 +116,10 @@ export class MockDataProvider implements DataProvider {
 
   async getRun(runId: string) {
     return PROCESS_RUNS.find((r) => r.id === runId)
+  }
+
+  async getRunLogs(runId: string) {
+    return RUN_LOGS[runId] ?? []
   }
 
   async getPendingActions() {

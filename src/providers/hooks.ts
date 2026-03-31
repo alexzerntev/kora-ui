@@ -12,6 +12,7 @@ import type {
   PendingAction,
   ActivityEntry,
   DataEvent,
+  RunLogEntry,
 } from './types'
 
 interface QueryResult<T> {
@@ -146,6 +147,11 @@ export function useWorkflowRuns(workflowId: string): QueryResult<ProcessRun[]> {
 export function useRun(runId: string): QueryResult<ProcessRun | undefined> {
   const provider = useDataProvider()
   return useQueryWithArg(() => provider.getRun(runId), runId)
+}
+
+export function useRunLogs(runId: string): QueryResult<RunLogEntry[]> {
+  const provider = useDataProvider()
+  return useQueryWithArg(() => provider.getRunLogs(runId), runId)
 }
 
 export function usePendingActions(refetchKey?: number): QueryResult<PendingAction[]> {

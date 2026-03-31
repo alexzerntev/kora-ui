@@ -11,6 +11,7 @@ import { Dashboard } from './pages/Dashboard'
 import { Organization } from './pages/Organization'
 import { Administration } from './pages/Administration'
 import { Runs } from './pages/Runs'
+import { RunDetail } from './pages/RunDetail'
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
             <Route path="/processes" element={<Workflows />} />
             <Route path="/processes/:id" element={<WorkflowDetail />} />
             <Route path="/runs" element={<Runs />} />
+            <Route path="/runs/:runId" element={<RunDetail />} />
             <Route path="/organization" element={<Organization />} />
             <Route path="/admin" element={<Administration />} />
             <Route path="/settings" element={<Settings />} />

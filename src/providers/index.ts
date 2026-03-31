@@ -13,6 +13,7 @@ export {
   useProcessRuns,
   useAllRuns,
   useRun,
+  useRunLogs,
   usePendingActions,
   useActivityFeed,
   useSubscription,
@@ -39,6 +40,8 @@ export type {
   NodeRunState,
   PendingAction,
   PendingActionType,
+  RunLogEntry,
+  RunLogEntryType,
   ActivityEntry,
 } from './types'
 export { TYPE_COLORS } from './types'

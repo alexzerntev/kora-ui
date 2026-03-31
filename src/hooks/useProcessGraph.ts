@@ -1,0 +1,209 @@
+import { useMemo } from 'react'
+import type { Node, Edge } from '@xyflow/react'
+import type { Workflow, NodeRunState } from '../providers/types'
+import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
+
+/**
+ * Build ReactFlow nodes and edges from a workflow definition,
+ * optionally overlaying run state (nodeStates).
+ *
+ * Shared by WorkflowDetail and RunDetail to avoid code duplication.
+ */
+export function useProcessGraph(
+  workflow: Workflow | undefined,
+  nodeStates: Record<string, NodeRunState> | undefined,
+): { nodes: Node[]; edges: Edge[] } {
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+  const nodes: Node[] = useMemo(() => {
+    if (!workflow) return []
+
+    const colGap = 140
+
+    // Build node map for sizing
+    const nodeMap: Record<string, (typeof workflow.nodes)[0]> = {}
+    workflow.nodes.forEach((n) => {
+      nodeMap[n.id] = n
+    })
+
+    // Separate parent-level nodes from child nodes
+    const topLevelNodes = workflow.nodes.filter((n) => !n.parentId)
+    const childNodes = workflow.nodes.filter((n) => !!n.parentId)
+
+    // Only layout top-level edges
+    const topLevelNodeIds = new Set(topLevelNodes.map((n) => n.id))
+    const topLevelEdges = workflow.edges.filter((e) => topLevelNodeIds.has(e.from) && topLevelNodeIds.has(e.to))
+
+    // Topological layering (top-level only)
+    const hasIncoming = new Set(topLevelEdges.map((e) => e.to))
+    const roots = topLevelNodes.filter((n) => !hasIncoming.has(n.id))
+
+    const layerMap: Record<string, number> = {}
+    roots.forEach((n) => {
+      layerMap[n.id] = 0
+    })
+
+    const placed = new Set(roots.map((r) => r.id))
+    let currentLayer = roots.map((r) => r.id)
+
+    while (currentLayer.length > 0) {
+      const nextLayer: string[] = []
+      for (const edge of topLevelEdges) {
+        if (currentLayer.includes(edge.from) && !placed.has(edge.to)) {
+          const parents = topLevelEdges.filter((e) => e.to === edge.to).map((e) => e.from)
+          const allParentsPlaced = parents.every((p) => placed.has(p))
+          if (allParentsPlaced && !nextLayer.includes(edge.to)) {
+            const maxParentLayer = Math.max(...parents.map((p) => layerMap[p]))
+            layerMap[edge.to] = maxParentLayer + 1
+            nextLayer.push(edge.to)
+          }
+        }
+      }
+      nextLayer.forEach((nid) => placed.add(nid))
+      currentLayer = nextLayer
+    }
+
+    // Group by layer
+    const layers: Record<number, string[]> = {}
+    for (const [nodeId, layer] of Object.entries(layerMap)) {
+      if (!layers[layer]) layers[layer] = []
+      layers[layer].push(nodeId)
+    }
+
+    // Compute max width per layer for x positioning
+    const layerX: Record<number, number> = {}
+    let x = 0
+    const maxLayer = Math.max(...Object.keys(layers).map(Number))
+    for (let l = 0; l <= maxLayer; l++) {
+      const nodeIds = layers[l] || []
+      const maxW = nodeIds.length > 0 ? Math.max(...nodeIds.map((nid) => getNodeDimsForNode(nodeMap[nid]).w)) : 220
+      layerX[l] = x
+      x += maxW + colGap
+    }
+
+    // Compute y positions within each layer
+    const positions: Record<string, { x: number; y: number }> = {}
+    const rowGap = 40
+
+    for (const [layerStr, nodeIds] of Object.entries(layers)) {
+      const layer = Number(layerStr)
+      const heights = nodeIds.map((nid) => getNodeDimsForNode(nodeMap[nid]).h)
+      const totalHeight = heights.reduce((sum, h) => sum + h, 0) + (nodeIds.length - 1) * rowGap
+      let y = -totalHeight / 2
+
+      nodeIds.forEach((nodeId, i) => {
+        const nodeW = getNodeDimsForNode(nodeMap[nodeId]).w
+        const layerMaxW = Math.max(...nodeIds.map((nid) => getNodeDimsForNode(nodeMap[nid]).w))
+        // Center narrower nodes within the layer column
+        const xOffset = (layerMaxW - nodeW) / 2
+
+        positions[nodeId] = {
+          x: layerX[layer] + xOffset,
+          y,
+        }
+        y += heights[i] + rowGap
+      })
+    }
+
+    // Position child nodes inside their parents
+    const childPositions: Record<string, { x: number; y: number }> = {}
+    const childrenByParent: Record<string, typeof childNodes> = {}
+    childNodes.forEach((n) => {
+      if (!childrenByParent[n.parentId!]) childrenByParent[n.parentId!] = []
+      childrenByParent[n.parentId!].push(n)
+    })
+    for (const [parentId, children] of Object.entries(childrenByParent)) {
+      const parent = nodeMap[parentId]
+      const parentW = parent?.style?.width ?? 500
+      const parentH = parent?.style?.height ?? 160
+      const gap = 40
+      const childDims = children.map((c) => getNodeDimsForNode(c))
+      const totalChildW = childDims.reduce((sum, d) => sum + d.w, 0) + (children.length - 1) * gap
+      let cx = (parentW - totalChildW) / 2
+
+      children.forEach((child, i) => {
+        const dims = childDims[i]
+        const cy = (parentH - dims.h) / 2 + 10
+        childPositions[child.id] = { x: cx, y: cy }
+        cx += dims.w + gap
+      })
+    }
+
+    return workflow.nodes.map((node) => ({
+      id: node.id,
+      type: getReactFlowType(node.kind),
+      position: node.parentId ? childPositions[node.id] || { x: 0, y: 0 } : positions[node.id] || { x: 0, y: 0 },
+      ...(node.parentId ? { parentId: node.parentId, extent: node.extent } : {}),
+      ...(node.style ? { style: node.style } : {}),
+      data: {
+        kind: node.kind,
+        label: node.label,
+        status: node.status,
+        taskId: node.taskId,
+        assigneeId: node.assigneeId,
+        assigneeName: node.assigneeName,
+        assigneeSeed: node.assigneeSeed,
+        assigneeType: node.assigneeType,
+        meta: node.meta,
+        runState: nodeStates?.[node.id],
+      },
+    }))
+  }, [workflow, nodeStates])
+
+  const edges: Edge[] = useMemo(() => {
+    if (!workflow) return []
+
+    // If we have run state data, use it for edge styling
+    if (nodeStates) {
+      return workflow.edges.map((e, i) => {
+        const sourceState = nodeStates[e.from]
+        const targetState = nodeStates[e.to]
+
+        let state: string = 'idle'
+        if (sourceState === 'done' && targetState === 'done') {
+          state = 'done'
+        } else if (sourceState === 'done' && targetState === 'running') {
+          state = 'active'
+        } else if (sourceState === 'skipped' || targetState === 'skipped') {
+          state = 'skipped'
+        } else if (sourceState === 'running' && (targetState === 'idle' || !targetState)) {
+          state = 'idle'
+        }
+
+        return {
+          id: `e-${i}`,
+          source: e.from,
+          target: e.to,
+          type: 'workflow',
+          label: e.label,
+          data: { state },
+        }
+      })
+    }
+
+    // Original edge logic (no run context)
+    const statusMap: Record<string, string> = {}
+    workflow.nodes.forEach((n) => {
+      statusMap[n.id] = n.status
+    })
+    const hasRunning = workflow.nodes.some((n) => n.status === 'running')
+
+    return workflow.edges.map((e, i) => {
+      const sourceStatus = statusMap[e.from]
+      const targetStatus = statusMap[e.to]
+      const isActive = hasRunning && sourceStatus === 'done' && targetStatus === 'running'
+      const isDone = hasRunning && sourceStatus === 'done' && (targetStatus === 'done' || targetStatus === 'running')
+      const state = isActive ? 'active' : isDone ? 'done' : 'idle'
+
+      return {
+        id: `e-${i}`,
+        source: e.from,
+        target: e.to,
+        type: 'workflow',
+        label: e.label,
+        data: { state },
+      }
+    })
+  }, [workflow, nodeStates])
+
+  return { nodes, edges }
+}
