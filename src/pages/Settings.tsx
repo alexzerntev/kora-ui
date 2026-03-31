@@ -6,8 +6,8 @@ const mono = 'ui-monospace, Consolas, monospace'
 function SectionHeading({ icon, title }: { icon: React.ReactNode; title: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-      <span style={{ display: 'flex', color: 'var(--color-ink-secondary)' }}>{icon}</span>
-      <h2 style={{ fontSize: 15, fontWeight: 650, color: 'var(--color-ink)' }}>{title}</h2>
+      <span style={{ display: 'flex', color: 'var(--color-foreground-secondary)' }}>{icon}</span>
+      <h2 className="section-heading">{title}</h2>
     </div>
   )
 }
@@ -23,12 +23,12 @@ function FieldRow({ label, value, mono: useMono }: { label: string; value: React
         borderBottom: '1px solid var(--color-border-light)',
       }}
     >
-      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink-secondary)' }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-foreground-secondary)' }}>{label}</span>
       <span
         style={{
           fontSize: 13,
           fontWeight: 600,
-          color: 'var(--color-ink)',
+          color: 'var(--color-foreground)',
           fontFamily: useMono ? mono : 'inherit',
         }}
       >
@@ -45,8 +45,8 @@ function ToolPill({ name }: { name: string }) {
         fontSize: 12,
         fontWeight: 600,
         fontFamily: mono,
-        color: 'var(--color-ink-secondary)',
-        background: 'var(--color-bg-hover)',
+        color: 'var(--color-foreground-secondary)',
+        background: 'var(--color-surface-hover)',
         padding: '4px 12px',
         borderRadius: 8,
         border: '1px solid var(--color-border-light)',
@@ -85,7 +85,9 @@ function EgressRow({ rule, isLast }: { rule: { action: 'allow' | 'deny'; target:
       >
         {isAllow ? <TbCheck /> : <TbX />}
       </span>
-      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: mono, color: 'var(--color-ink)' }}>{rule.target}</span>
+      <span style={{ fontSize: 13, fontWeight: 600, fontFamily: mono, color: 'var(--color-foreground)' }}>
+        {rule.target}
+      </span>
       <span
         style={{
           marginLeft: 'auto',
@@ -130,8 +132,10 @@ export function Settings() {
               padding: '12px 0',
             }}
           >
-            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-ink-secondary)' }}>Description</span>
-            <span style={{ fontSize: 13, color: 'var(--color-ink)', lineHeight: 1.6 }}>{description}</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: 'var(--color-foreground-secondary)' }}>
+              Description
+            </span>
+            <span style={{ fontSize: 13, color: 'var(--color-foreground)', lineHeight: 1.6 }}>{description}</span>
           </div>
         </div>
       </section>
@@ -199,7 +203,7 @@ export function Settings() {
               style={{
                 fontSize: 12,
                 fontWeight: 650,
-                color: 'var(--color-ink-muted)',
+                color: 'var(--color-foreground-muted)',
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
               }}

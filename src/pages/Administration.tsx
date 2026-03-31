@@ -138,7 +138,7 @@ export function Administration() {
             style={{
               fontSize: 10,
               fontWeight: 700,
-              color: 'var(--color-ink-muted)',
+              color: 'var(--color-foreground-muted)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               padding: '0 12px 6px',
@@ -160,7 +160,7 @@ export function Administration() {
             style={{
               fontSize: 10,
               fontWeight: 700,
-              color: 'var(--color-ink-muted)',
+              color: 'var(--color-foreground-muted)',
               textTransform: 'uppercase',
               letterSpacing: '0.08em',
               padding: '16px 12px 6px',

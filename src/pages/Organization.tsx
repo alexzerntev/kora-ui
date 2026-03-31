@@ -34,10 +34,10 @@ function GroupLabelNode({ data }: { data: { label: string; width: number; height
           padding: '10px 14px',
           fontSize: 11,
           fontWeight: 600,
-          color: '#6b7280',
+          color: 'var(--color-foreground-muted)',
           textTransform: 'uppercase',
           letterSpacing: '0.06em',
-          fontFamily: "'DM Sans', system-ui, sans-serif",
+          fontFamily: 'var(--font-sans)',
         }}
       >
         {data.label}
@@ -429,7 +429,7 @@ export function Organization() {
           alignItems: 'center',
           justifyContent: 'center',
           flex: 1,
-          color: '#6b7280',
+          color: 'var(--color-foreground-muted)',
           fontSize: 14,
         }}
       >

@@ -268,28 +268,10 @@ export function Releases() {
 
   return (
     <div>
-      {/* Page header */}
-      <div style={{ marginBottom: 28 }}>
-        <h1
-          style={{
-            fontSize: 22,
-            fontWeight: 700,
-            color: 'var(--color-foreground)',
-            letterSpacing: '-0.02em',
-          }}
-        >
-          Releases
-        </h1>
-        <p
-          style={{
-            fontSize: 14,
-            color: 'var(--color-foreground-muted)',
-            marginTop: 4,
-          }}
-        >
-          Manage drafts and published releases
-        </p>
-      </div>
+      <header className="page-header">
+        <h1>Releases</h1>
+        <p>Manage drafts and published releases</p>
+      </header>
 
       {/* Tabs */}
       <div

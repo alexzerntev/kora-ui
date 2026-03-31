@@ -28,8 +28,8 @@ export function FloatingHeader({ title, subtitle, left, right }: FloatingHeaderP
     >
       {left}
       <div style={{ flex: 1 }}>
-        <h1 style={{ fontSize: 16, fontWeight: 700, color: '#111827' }}>{title}</h1>
-        {subtitle && <p style={{ fontSize: 12, color: '#6b7280', marginTop: 1 }}>{subtitle}</p>}
+        <h1 className="topbar-title">{title}</h1>
+        {subtitle && <p className="topbar-subtitle">{subtitle}</p>}
       </div>
       {right}
     </div>

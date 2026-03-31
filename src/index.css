@@ -217,6 +217,27 @@ body {
   margin-top: 6px;
 }
 
+/* ── Top bar header (detail pages with back button) ── */
+
+.topbar-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--color-foreground);
+}
+.topbar-subtitle {
+  font-size: 12px;
+  color: var(--color-foreground-muted);
+  margin-top: 1px;
+}
+
+/* ── Section heading (icon + title) ── */
+
+.section-heading {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--color-foreground);
+}
+
 /* ── Section label ── */
 
 .section-label {

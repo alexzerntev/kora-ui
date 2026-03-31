@@ -73,58 +73,22 @@ export function RunDetail() {
   return (
     <div
       style={{
-        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
         flex: 1,
         minHeight: 0,
-        overflow: 'hidden',
       }}
     >
-      {/* Full-bleed ReactFlow Canvas */}
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        fitView
-        fitViewOptions={{ padding: 0.3 }}
-        connectionLineType={ConnectionLineType.Bezier}
-        proOptions={{ hideAttribution: true }}
-        nodesDraggable
-        nodesConnectable={false}
-        elementsSelectable
-      >
-        <Background gap={32} size={1} color="#e8e8e8" />
-        <Controls
-          showInteractive={false}
-          position="bottom-right"
-          style={{
-            borderRadius: 12,
-            border: '1px solid var(--color-border-light)',
-            overflow: 'hidden',
-            background: '#fff',
-            marginBottom: 210,
-          }}
-        />
-      </ReactFlow>
-
-      {/* Floating top bar */}
+      {/* Top bar */}
       <div
         style={{
-          position: 'absolute',
-          top: 16,
-          left: 16,
-          right: 16,
-          zIndex: 10,
           display: 'flex',
           alignItems: 'center',
           gap: 14,
           padding: '10px 20px',
-          background: 'rgba(255,255,255,0.88)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderRadius: 14,
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          border: '1px solid rgba(0,0,0,0.04)',
+          background: '#fff',
+          borderBottom: '1px solid rgba(0,0,0,0.06)',
+          flexShrink: 0,
           flexWrap: 'wrap' as const,
         }}
       >
@@ -223,19 +187,41 @@ export function RunDetail() {
         </div>
       </div>
 
-      {/* Floating Audit Log Panel */}
+      {/* Canvas */}
+      <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.3 }}
+          connectionLineType={ConnectionLineType.Bezier}
+          proOptions={{ hideAttribution: true }}
+          nodesDraggable
+          nodesConnectable={false}
+          elementsSelectable
+        >
+          <Background gap={32} size={1} color="#e8e8e8" />
+          <Controls
+            showInteractive={false}
+            position="bottom-right"
+            style={{
+              borderRadius: 12,
+              border: '1px solid var(--color-border-light)',
+              overflow: 'hidden',
+              background: '#fff',
+            }}
+          />
+        </ReactFlow>
+      </div>
+
+      {/* Audit Log Panel */}
       <div
         style={{
-          position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          background: 'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
+          flexShrink: 0,
           borderTop: '1px solid rgba(0,0,0,0.06)',
-          boxShadow: '0 -2px 12px rgba(0,0,0,0.04)',
+          background: '#fff',
         }}
       >
         <AuditLogPanel logs={logs ?? []} loading={logsLoading} />
