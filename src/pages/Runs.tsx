@@ -19,10 +19,10 @@ const STATUS_FILTERS: { label: string; value: RunStatus | 'all' }[] = [
 ]
 
 const STATUS_COLORS: Record<RunStatus, { color: string; bg: string }> = {
-  running: { color: '#10b981', bg: '#ecfdf5' },
-  completed: { color: '#10b981', bg: '#ecfdf5' },
-  failed: { color: '#ef4444', bg: '#fef2f2' },
-  paused: { color: '#f59e0b', bg: '#fffbeb' },
+  running: { color: 'var(--color-status-done)', bg: '#ecfdf5' },
+  completed: { color: 'var(--color-status-done)', bg: '#ecfdf5' },
+  failed: { color: 'var(--color-status-failed)', bg: '#fef2f2' },
+  paused: { color: 'var(--color-status-processing)', bg: '#fffbeb' },
 }
 
 function formatRelativeTime(dateStr: string): string {
@@ -234,7 +234,7 @@ export function Runs() {
           style={{
             padding: '5px 12px',
             borderRadius: 8,
-            border: '1px solid rgba(0,0,0,0.08)',
+            border: '1px solid var(--color-border)',
             background: 'var(--color-surface)',
             color: 'var(--color-foreground-secondary)',
             fontSize: 12,

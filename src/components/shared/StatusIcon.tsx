@@ -11,10 +11,10 @@ const VARIANT_CONFIG: Record<
   StatusIconVariant,
   { color: string; icon: React.ComponentType<{ size: number; style?: React.CSSProperties }> }
 > = {
-  running: { color: '#10b981', icon: TbCircleFilled },
-  completed: { color: '#10b981', icon: TbCircleCheck },
-  failed: { color: '#ef4444', icon: TbCircleX },
-  paused: { color: '#f59e0b', icon: TbPlayerPause },
+  running: { color: 'var(--color-status-done)', icon: TbCircleFilled },
+  completed: { color: 'var(--color-status-done)', icon: TbCircleCheck },
+  failed: { color: 'var(--color-status-failed)', icon: TbCircleX },
+  paused: { color: 'var(--color-status-processing)', icon: TbPlayerPause },
 }
 
 export function StatusIcon({ variant, size = 14 }: StatusIconProps) {

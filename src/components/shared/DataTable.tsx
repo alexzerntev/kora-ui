@@ -33,8 +33,8 @@ export function DataTable<T>({ columns, data, onRowClick, rowKey }: DataTablePro
           display: 'grid',
           gridTemplateColumns,
           padding: '10px 20px',
-          borderBottom: '1px solid var(--color-border)',
-          background: 'var(--color-surface-hover)',
+          borderBottom: '1px solid var(--color-border-light)',
+          background: 'rgba(0, 0, 0, 0.015)',
         }}
       >
         {columns.map((col) => (

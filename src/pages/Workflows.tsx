@@ -48,7 +48,7 @@ export function Workflows() {
         header: 'Name',
         width: '1.5fr',
         render: (w) => (
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)' }}>{w.name}</span>
+          <span style={{ fontSize: 13, fontWeight: 550, color: 'var(--color-foreground)' }}>{w.name}</span>
         ),
       },
       {
@@ -101,10 +101,10 @@ export function Workflows() {
                 style={{
                   fontSize: 11,
                   fontWeight: 600,
-                  color: '#b45309',
+                  color: 'var(--color-status-processing)',
                   background: '#fffbeb',
-                  padding: '3px 10px',
-                  borderRadius: 12,
+                  padding: '3px 9px',
+                  borderRadius: 'var(--radius-sm)',
                   whiteSpace: 'nowrap',
                 }}
               >
