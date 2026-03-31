@@ -10,6 +10,7 @@ import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
 import { useProcess } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
 import { TbArrowLeft } from 'react-icons/tb'
+import { FloatingHeader } from '../components/shared/FloatingHeader'
 
 const nodeTypes = {
   desk: DeskNode,
@@ -208,70 +209,52 @@ export function WorkflowDetail() {
         position: 'relative',
       }}
     >
-      {/* Floating header */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 16,
-          left: 16,
-          right: 16,
-          zIndex: 10,
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          background: 'rgba(255,255,255,0.88)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: 14,
-          padding: '12px 20px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          border: '1px solid var(--color-border-light)',
-        }}
-      >
-        <button
-          onClick={() => navigate('/processes')}
-          className="back-btn"
-          style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
-        >
-          <TbArrowLeft size={18} />
-        </button>
-
-        <div style={{ flex: 1 }}>
-          <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-ink)' }}>{workflow.name}</h1>
-          <p style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>{workflow.description}</p>
-        </div>
-
-        {isRunning ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--color-ink-secondary)' }}>
-              {doneCount}/{totalCount}
-            </span>
-            <div
-              style={{
-                width: 80,
-                height: 4,
-                background: 'var(--color-border-light)',
-                borderRadius: 2,
-                overflow: 'hidden',
-              }}
-            >
+      <FloatingHeader
+        title={workflow.name}
+        subtitle={workflow.description}
+        left={
+          <button
+            onClick={() => navigate('/processes')}
+            className="back-btn"
+            style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
+          >
+            <TbArrowLeft size={18} />
+          </button>
+        }
+        right={
+          isRunning ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
+                {doneCount}/{totalCount}
+              </span>
               <div
                 style={{
-                  height: '100%',
-                  width: `${(doneCount / totalCount) * 100}%`,
-                  background: 'var(--color-status-done)',
+                  width: 80,
+                  height: 4,
+                  background: '#f3f4f6',
                   borderRadius: 2,
+                  overflow: 'hidden',
                 }}
-              />
+              >
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${(doneCount / totalCount) * 100}%`,
+                    background: 'var(--color-status-done)',
+                    borderRadius: 2,
+                  }}
+                />
+              </div>
             </div>
-          </div>
-        ) : (
-          <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-ink-muted)' }}>
-            {workflow.lastRunAt
-              ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-              : 'Never run'}
-          </span>
-        )}
-      </div>
+          ) : (
+            <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>
+              {workflow.lastRunAt
+                ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                : 'Never run'}
+            </span>
+          )
+        }
+      />
 
       {/* Full-bleed canvas */}
       <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>

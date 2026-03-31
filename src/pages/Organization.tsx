@@ -11,6 +11,7 @@ import type { Assignment } from '../providers/types'
 import { isAgent } from '../data/team'
 import { optimizeNodeOrder, type Connection } from '../utils/orgLayout'
 import { OrgHoverContext, type OrgHoverState } from '../contexts/OrgHoverContext'
+import { FloatingHeader } from '../components/shared/FloatingHeader'
 
 /* ------------------------------------------------------------------ */
 /*  Group label node                                                   */
@@ -447,24 +448,7 @@ export function Organization() {
         position: 'relative',
       }}
     >
-      {/* Floating header */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 16,
-          left: 16,
-          zIndex: 10,
-          background: 'rgba(255,255,255,0.88)',
-          backdropFilter: 'blur(12px)',
-          borderRadius: 14,
-          padding: '12px 20px',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          border: '1px solid var(--color-border-light)',
-        }}
-      >
-        <h1 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-ink)' }}>Organization</h1>
-        <p style={{ fontSize: 12, color: 'var(--color-ink-secondary)' }}>People, agents, roles, and task assignments</p>
-      </div>
+      <FloatingHeader title="Organization" subtitle="People, agents, roles, and task assignments" />
 
       {/* ReactFlow canvas */}
       <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
