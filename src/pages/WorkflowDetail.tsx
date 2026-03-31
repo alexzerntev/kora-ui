@@ -7,11 +7,65 @@ import { EventNode } from '../components/nodes/EventNode'
 import { GatewayNode } from '../components/nodes/GatewayNode'
 import { ActivityNode } from '../components/nodes/ActivityNode'
 import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
-import { useProcess, useRunProcess } from '../providers/hooks'
+import { useProcess, useRunProcess, useWorkflowRuns } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
-import { TbArrowLeft } from 'react-icons/tb'
+import { TbArrowLeft, TbCircleCheckFilled, TbCircleXFilled, TbPlayerPauseFilled } from 'react-icons/tb'
 import { FloatingHeader } from '../components/shared/FloatingHeader'
+import { CollapsiblePanel } from '../components/shared/CollapsiblePanel'
 import { RunProcessButton } from '../components/shared/RunProcessButton'
+import type { RunStatus } from '../providers/types'
+
+function statusIcon(status: RunStatus) {
+  switch (status) {
+    case 'running':
+      return (
+        <span
+          style={{
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: '#10b981',
+            display: 'inline-block',
+            flexShrink: 0,
+            boxShadow: '0 0 0 2px rgba(16,185,129,0.2)',
+          }}
+        />
+      )
+    case 'completed':
+      return <TbCircleCheckFilled size={16} color="#10b981" style={{ flexShrink: 0 }} />
+    case 'failed':
+      return <TbCircleXFilled size={16} color="#ef4444" style={{ flexShrink: 0 }} />
+    case 'paused':
+      return <TbPlayerPauseFilled size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
+  }
+}
+
+function relativeTime(dateStr: string): string {
+  const now = new Date()
+  const then = new Date(dateStr)
+  const diffMs = now.getTime() - then.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffH = Math.floor(diffMin / 60)
+  if (diffH < 24) return `${diffH}h ago`
+  const diffD = Math.floor(diffH / 24)
+  return `${diffD}d ago`
+}
+
+const statusLabel: Record<RunStatus, string> = {
+  running: 'Running',
+  completed: 'Completed',
+  failed: 'Failed',
+  paused: 'Paused',
+}
+
+const statusColor: Record<RunStatus, string> = {
+  running: '#10b981',
+  completed: '#6b7280',
+  failed: '#ef4444',
+  paused: '#f59e0b',
+}
 
 const nodeTypes = {
   desk: DeskNode,
@@ -25,6 +79,7 @@ export function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: workflow, loading } = useProcess(id ?? '')
+  const { data: runs } = useWorkflowRuns(id ?? '')
   const { run, running } = useRunProcess()
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
@@ -264,6 +319,105 @@ export function WorkflowDetail() {
           </div>
         }
       />
+
+      {runs && runs.length > 0 && (
+        <CollapsiblePanel title="Runs" count={runs.length}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto' }}>
+            {runs.map((r) => (
+              <div
+                key={r.id}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '8px 10px',
+                  borderRadius: 10,
+                  background: 'rgba(0,0,0,0.02)',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0,0,0,0.04)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0,0,0,0.02)'
+                }}
+              >
+                {statusIcon(r.status)}
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{r.triggeredBy}</span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: statusColor[r.status],
+                        textTransform: 'capitalize',
+                      }}
+                    >
+                      {statusLabel[r.status]}
+                    </span>
+                  </div>
+                  {r.status === 'running' && (
+                    <span style={{ fontSize: 11, color: '#6b7280' }}>Step: {r.currentStep}</span>
+                  )}
+                </div>
+
+                {/* Progress */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#6b7280' }}>
+                    {r.stepsCompleted}/{r.stepsTotal}
+                  </span>
+                  <div
+                    style={{
+                      width: 48,
+                      height: 4,
+                      background: '#f3f4f6',
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${r.progress}%`,
+                        background: statusColor[r.status],
+                        borderRadius: 2,
+                        transition: 'width 0.3s ease',
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Time */}
+                <span style={{ fontSize: 11, color: '#9ca3af', flexShrink: 0, width: 48, textAlign: 'right' }}>
+                  {relativeTime(r.startedAt)}
+                </span>
+
+                {/* View button */}
+                <button
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    color: 'var(--color-primary)',
+                    background: 'var(--color-primary-light)',
+                    border: 'none',
+                    borderRadius: 6,
+                    padding: '3px 10px',
+                    cursor: 'pointer',
+                    fontFamily: 'inherit',
+                    flexShrink: 0,
+                  }}
+                >
+                  View
+                </button>
+              </div>
+            ))}
+          </div>
+        </CollapsiblePanel>
+      )}
 
       {/* Full-bleed canvas */}
       <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>

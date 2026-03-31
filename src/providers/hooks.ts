@@ -133,6 +133,11 @@ export function useProcessRuns(refetchKey?: number): QueryResult<ProcessRun[]> {
   return useQuery(() => provider.getProcessRuns(), refetchKey)
 }
 
+export function useWorkflowRuns(workflowId: string): QueryResult<ProcessRun[]> {
+  const provider = useDataProvider()
+  return useQueryWithArg(() => provider.getRunsForWorkflow(workflowId), workflowId)
+}
+
 export function usePendingActions(refetchKey?: number): QueryResult<PendingAction[]> {
   const provider = useDataProvider()
   return useQuery(() => provider.getPendingActions(), refetchKey)

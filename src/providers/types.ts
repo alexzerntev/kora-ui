@@ -64,6 +64,9 @@ export interface DataProvider {
   /** List active process runs with status */
   getProcessRuns(): Promise<ProcessRun[]>
 
+  /** List process runs for a specific workflow */
+  getRunsForWorkflow(workflowId: string): Promise<ProcessRun[]>
+
   /** List pending actions requiring human input */
   getPendingActions(): Promise<PendingAction[]>
 
