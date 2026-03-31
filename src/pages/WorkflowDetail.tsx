@@ -10,6 +10,7 @@ import { useProcess, useRunProcess, useRun } from '../providers/hooks'
 import { TbArrowLeft, TbX } from 'react-icons/tb'
 import { RunProcessButton } from '../components/shared/RunProcessButton'
 import { StatusBadge } from '../components/shared/StatusBadge'
+import { Button } from '@/components/ui/button'
 import { useProcessGraph } from '../hooks/useProcessGraph'
 
 const nodeTypes = {
@@ -79,13 +80,14 @@ export function WorkflowDetail() {
           flexShrink: 0,
         }}
       >
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => (runId ? navigate('/runs') : navigate('/processes'))}
-          className="back-btn"
-          style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
+          className="text-foreground-muted hover:text-foreground"
         >
           <TbArrowLeft size={18} />
-        </button>
+        </Button>
         <div style={{ flex: 1, minWidth: 0 }}>
           <h1 className="topbar-title">{workflow.name}</h1>
           {workflow.description && <p className="topbar-subtitle">{workflow.description}</p>}
@@ -174,26 +176,10 @@ export function WorkflowDetail() {
             {runData.stepsCompleted}/{runData.stepsTotal} steps
           </span>
           <div style={{ flex: 1 }} />
-          <button
-            onClick={clearRun}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-              padding: '4px 10px',
-              borderRadius: 6,
-              border: '1px solid var(--color-border)',
-              background: 'rgba(255,255,255,0.9)',
-              color: 'var(--color-foreground-secondary)',
-              fontSize: 12,
-              fontWeight: 500,
-              cursor: 'pointer',
-              fontFamily: 'inherit',
-            }}
-          >
+          <Button variant="outline" size="xs" onClick={clearRun} className="text-foreground-secondary">
             <TbX size={14} />
             Clear
-          </button>
+          </Button>
         </div>
       )}
 

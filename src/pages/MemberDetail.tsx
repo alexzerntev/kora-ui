@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getMemberById, isAgent, TYPE_COLORS } from '../data/team'
 import type { AgentMember, TeamMember, TaskRun } from '../data/team'
 import { Avatar } from '../components/Avatar'
+import { Button } from '@/components/ui/button'
 import { TbArrowLeft } from 'react-icons/tb'
 
 function StatusDot({ status }: { status: TaskRun['status'] }) {
@@ -321,10 +322,15 @@ export function MemberDetail() {
   return (
     <div style={{ maxWidth: 800 }}>
       {/* Back link */}
-      <button onClick={() => navigate('/team')} className="back-btn">
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => navigate('/team')}
+        className="mb-5 gap-1.5 px-0 text-[13px] font-medium text-foreground-muted hover:bg-transparent hover:text-foreground"
+      >
         <TbArrowLeft size={16} />
         Back to Team
-      </button>
+      </Button>
 
       {/* Header card */}
       <div className="content-card" style={{ overflow: 'hidden', marginBottom: 32, cursor: 'default' }}>

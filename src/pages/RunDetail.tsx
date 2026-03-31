@@ -10,6 +10,7 @@ import { useProcess, useRun, useRunLogs } from '../providers/hooks'
 import { TbArrowLeft } from 'react-icons/tb'
 import { StatusBadge } from '../components/shared/StatusBadge'
 import { AuditLogPanel } from '../components/shared/AuditLogPanel'
+import { Button } from '@/components/ui/button'
 import { useProcessGraph } from '../hooks/useProcessGraph'
 
 const nodeTypes = {
@@ -92,13 +93,14 @@ export function RunDetail() {
           flexWrap: 'wrap' as const,
         }}
       >
-        <button
+        <Button
+          variant="ghost"
+          size="icon-sm"
           onClick={() => navigate('/runs')}
-          className="back-btn"
-          style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
+          className="text-foreground-muted hover:text-foreground"
         >
           <TbArrowLeft size={18} />
-        </button>
+        </Button>
 
         {/* Run ID */}
         <span

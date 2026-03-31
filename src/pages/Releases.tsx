@@ -3,6 +3,7 @@ import { useDrafts, useReleases } from '../providers/hooks'
 import { useDataProvider } from '../providers/context'
 import { DataTable } from '../components/shared/DataTable'
 import { StatusBadge } from '../components/shared/StatusBadge'
+import { Button } from '@/components/ui/button'
 import type { Column } from '../components/shared/DataTable'
 import type { Draft, Release } from '../providers/types'
 import { TbRocket, TbTrash, TbArrowBackUp, TbChevronDown, TbChevronRight } from 'react-icons/tb'
@@ -105,59 +106,26 @@ function ActionButton({
   variant: 'primary' | 'danger' | 'default'
   onClick: () => void
 }) {
-  const styles: Record<string, { color: string; bg: string; hoverBg: string; border: string }> = {
-    primary: {
-      color: '#fff',
-      bg: 'var(--color-primary)',
-      hoverBg: '#1e40af',
-      border: 'var(--color-primary)',
-    },
-    danger: {
-      color: 'var(--color-status-failed)',
-      bg: 'transparent',
-      hoverBg: '#fef2f2',
-      border: 'var(--color-border)',
-    },
-    default: {
-      color: 'var(--color-foreground-secondary)',
-      bg: 'transparent',
-      hoverBg: 'rgba(0,0,0,0.03)',
-      border: 'var(--color-border)',
-    },
-  }
-  const s = styles[variant]
+  const btnVariant = variant === 'primary' ? 'default' : variant === 'danger' ? 'destructive' : 'outline'
   return (
-    <button
+    <Button
+      variant={btnVariant}
+      size="sm"
+      className={
+        variant === 'danger'
+          ? 'border-border bg-transparent text-destructive hover:bg-red-50 hover:text-destructive'
+          : variant === 'default'
+            ? 'text-foreground-secondary'
+            : ''
+      }
       onClick={(e) => {
         e.stopPropagation()
         onClick()
       }}
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 5,
-        padding: '5px 12px',
-        borderRadius: 7,
-        border: `1px solid ${s.border}`,
-        background: s.bg,
-        color: s.color,
-        fontSize: 12,
-        fontWeight: 550,
-        cursor: 'pointer',
-        fontFamily: 'inherit',
-        transition: 'background 0.12s ease',
-        whiteSpace: 'nowrap',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = s.hoverBg
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = s.bg
-      }}
     >
       <Icon size={14} />
       {label}
-    </button>
+    </Button>
   )
 }
 

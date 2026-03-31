@@ -67,6 +67,18 @@
   --radius-lg: 12px;
   --radius-xl: 16px;
 
+  /* shadcn/ui semantic tokens */
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #f3f4f6;
+  --color-secondary-foreground: #111827;
+  --color-muted: #f3f4f6;
+  --color-muted-foreground: #6b7280;
+  --color-accent: #f3f4f6;
+  --color-accent-foreground: #111827;
+  --color-destructive: #ef4444;
+  --color-input: rgba(0, 0, 0, 0.1);
+  --color-ring: #1d4ed8;
+
   /* Legacy aliases */
   --color-bg: #ffffff;
   --color-bg-surface: #ffffff;
@@ -75,7 +87,6 @@
   --color-ink: #111827;
   --color-ink-secondary: #374151;
   --color-ink-muted: #6b7280;
-  --color-accent: #1d4ed8;
   --color-accent-light: #eff6ff;
 }
 

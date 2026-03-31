@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { TbPlayerPlay } from 'react-icons/tb'
+import { Button } from '@/components/ui/button'
 import type { WorkflowInputField } from '../../providers/types'
 
 interface RunProcessButtonProps {
@@ -109,32 +110,7 @@ export function RunProcessButton({ schema, onRun, disabled }: RunProcessButtonPr
 
   return (
     <div ref={dropdownRef} style={{ position: 'relative' }}>
-      <button
-        onClick={handleButtonClick}
-        disabled={disabled}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '6px 14px',
-          fontSize: 13,
-          fontWeight: 600,
-          fontFamily: 'inherit',
-          color: '#ffffff',
-          background: 'var(--color-primary)',
-          border: 'none',
-          borderRadius: 'var(--radius-md)',
-          cursor: disabled ? 'not-allowed' : 'pointer',
-          opacity: disabled ? 0.5 : 1,
-          transition: 'background 0.15s ease',
-        }}
-        onMouseEnter={(e) => {
-          if (!disabled) e.currentTarget.style.background = 'var(--color-primary-hover)'
-        }}
-        onMouseLeave={(e) => {
-          if (!disabled) e.currentTarget.style.background = 'var(--color-primary)'
-        }}
-      >
+      <Button size="sm" onClick={handleButtonClick} disabled={disabled} className="gap-1.5 font-semibold">
         <TbPlayerPlay size={14} />
         Run
         {hasInputs && (
@@ -151,7 +127,7 @@ export function RunProcessButton({ schema, onRun, disabled }: RunProcessButtonPr
             <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" fill="none" strokeLinecap="round" />
           </svg>
         )}
-      </button>
+      </Button>
 
       {open && hasInputs && (
         <div
@@ -230,36 +206,10 @@ export function RunProcessButton({ schema, onRun, disabled }: RunProcessButtonPr
             })}
           </div>
 
-          <button
-            onClick={handleSubmit}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 6,
-              width: '100%',
-              marginTop: 16,
-              padding: '8px 0',
-              fontSize: 13,
-              fontWeight: 600,
-              fontFamily: 'inherit',
-              color: '#ffffff',
-              background: 'var(--color-primary)',
-              border: 'none',
-              borderRadius: 'var(--radius-sm)',
-              cursor: 'pointer',
-              transition: 'background 0.15s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-primary-hover)'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'var(--color-primary)'
-            }}
-          >
+          <Button onClick={handleSubmit} className="mt-4 w-full gap-1.5 font-semibold">
             <TbPlayerPlay size={14} />
             Run
-          </button>
+          </Button>
         </div>
       )}
     </div>

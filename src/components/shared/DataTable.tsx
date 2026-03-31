@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
 
 export interface Column<T> {
   key: string
@@ -15,74 +17,44 @@ interface DataTableProps<T> {
 }
 
 export function DataTable<T>({ columns, data, onRowClick, rowKey }: DataTableProps<T>) {
-  const gridTemplateColumns = columns.map((col) => col.width ?? '1fr').join(' ')
-
   return (
-    <div>
-      {/* Header */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns,
-          padding: '0 4px 10px',
-          borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-        }}
-      >
-        {columns.map((col) => (
-          <span
-            key={col.key}
-            style={{
-              fontSize: 11,
-              fontWeight: 500,
-              color: 'var(--color-foreground-muted)',
-              textTransform: 'uppercase',
-              letterSpacing: '0.06em',
-            }}
-          >
-            {col.header}
-          </span>
-        ))}
-      </div>
-
-      {/* Rows */}
-      {data.map((item, index) => (
-        <div
-          key={rowKey(item)}
-          onClick={onRowClick ? () => onRowClick(item) : undefined}
-          style={{
-            display: 'grid',
-            gridTemplateColumns,
-            padding: '14px 4px',
-            borderBottom: index < data.length - 1 ? '1px solid rgba(0, 0, 0, 0.04)' : 'none',
-            cursor: onRowClick ? 'pointer' : 'default',
-            transition: 'background 0.15s ease',
-            alignItems: 'center',
-            borderRadius: 6,
-            margin: '0 -4px',
-            paddingLeft: 8,
-            paddingRight: 8,
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = 'var(--color-surface-hover)'
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'transparent'
-          }}
-        >
+    <Table className="[&_[data-slot=table-container]]:overflow-visible">
+      <TableHeader>
+        <TableRow className="border-b-border hover:bg-transparent">
           {columns.map((col) => (
-            <div
+            <TableHead
               key={col.key}
-              style={{
-                fontSize: 13,
-                color: 'var(--color-foreground)',
-                lineHeight: 1.5,
-              }}
+              className="h-auto px-1 pb-2.5 text-[11px] font-medium uppercase tracking-[0.06em] text-foreground-muted"
+              style={col.width ? { width: col.width } : undefined}
             >
-              {col.render(item)}
-            </div>
+              {col.header}
+            </TableHead>
           ))}
-        </div>
-      ))}
-    </div>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {data.map((item) => (
+          <TableRow
+            key={rowKey(item)}
+            onClick={onRowClick ? () => onRowClick(item) : undefined}
+            className={cn(
+              'border-b-border-light transition-colors duration-150',
+              onRowClick && 'cursor-pointer',
+              'hover:bg-[rgba(0,0,0,0.03)]',
+            )}
+          >
+            {columns.map((col) => (
+              <TableCell
+                key={col.key}
+                className="px-1 py-3.5 text-[13px] leading-relaxed text-foreground"
+                style={col.width ? { width: col.width } : undefined}
+              >
+                {col.render(item)}
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   )
 }
