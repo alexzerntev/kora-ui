@@ -1,9 +1,9 @@
-import { Handle, Position } from '@xyflow/react'
 import { Avatar } from '../Avatar'
 import { HiUser, HiCheck } from 'react-icons/hi2'
 import { RiRobot2Fill } from 'react-icons/ri'
 import { TbSubtask } from 'react-icons/tb'
 import { TEAM, TYPE_COLORS } from '../../data/team'
+import { CardNode, NodeHandles } from './shared'
 
 const ROLE_PILL_COLORS = [
   { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' }, // blue
@@ -24,6 +24,86 @@ interface DeskNodeData {
   assigneeType?: 'human' | 'agent'
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+}
+
+/* -- Shared role pills + task title -- */
+
+function TaskTitle({
+  label,
+  capability,
+  isRunning,
+  isDone,
+}: {
+  label: string
+  capability?: string
+  isRunning: boolean
+  isDone: boolean
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+      <div>
+        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.3 }}>{label}</div>
+        {capability && (
+          <div
+            style={{
+              fontSize: 11,
+              color: '#999',
+              marginTop: 2,
+              fontFamily: 'ui-monospace, Consolas, monospace',
+            }}
+          >
+            {capability}
+          </div>
+        )}
+      </div>
+      <div style={{ flexShrink: 0 }}>
+        {isRunning && (
+          <div
+            style={{
+              width: 12,
+              height: 12,
+              borderRadius: '50%',
+              border: '2px solid #e0e7ff',
+              borderTopColor: '#818cf8',
+              animation: 'spin 0.8s linear infinite',
+            }}
+          />
+        )}
+        {isDone && <HiCheck size={13} style={{ color: '#22c55e' }} />}
+      </div>
+    </div>
+  )
+}
+
+function RolePills({ roles }: { roles: string[] }) {
+  if (roles.length === 0) return null
+  return (
+    <div>
+      <div style={{ fontSize: 10, fontWeight: 500, color: '#aaa', marginBottom: 5 }}>Required roles</div>
+      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+        {roles.map((role, i) => {
+          const palette = ROLE_PILL_COLORS[i % ROLE_PILL_COLORS.length]
+          return (
+            <span
+              key={role}
+              style={{
+                fontSize: 11,
+                fontWeight: 500,
+                color: palette.text,
+                background: palette.bg,
+                border: `1px solid ${palette.border}`,
+                padding: '2px 8px',
+                borderRadius: 6,
+                fontFamily: 'ui-monospace, Consolas, monospace',
+              }}
+            >
+              {role}
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 /* -- Assigned task node (full card with avatar) -- */
@@ -129,162 +209,9 @@ function AssignedDeskNode({ data, isRunning, isDone }: { data: DeskNodeData; isR
 
       {/* Task content */}
       <div style={{ padding: '4px 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-          <div>
-            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.3 }}>
-              {data.label}
-            </div>
-            {capability && (
-              <div
-                style={{
-                  fontSize: 11,
-                  color: '#999',
-                  marginTop: 2,
-                  fontFamily: 'ui-monospace, Consolas, monospace',
-                }}
-              >
-                {capability}
-              </div>
-            )}
-          </div>
-          <div style={{ flexShrink: 0 }}>
-            {isRunning && (
-              <div
-                style={{
-                  width: 12,
-                  height: 12,
-                  borderRadius: '50%',
-                  border: '2px solid #e0e7ff',
-                  borderTopColor: '#818cf8',
-                  animation: 'spin 0.8s linear infinite',
-                }}
-              />
-            )}
-            {isDone && <HiCheck size={13} style={{ color: '#22c55e' }} />}
-          </div>
-        </div>
-
-        {roles.length > 0 && (
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 500, color: '#aaa', marginBottom: 5 }}>Required roles</div>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {roles.map((role, i) => {
-                const palette = ROLE_PILL_COLORS[i % ROLE_PILL_COLORS.length]
-                return (
-                  <span
-                    key={role}
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 500,
-                      color: palette.text,
-                      background: palette.bg,
-                      border: `1px solid ${palette.border}`,
-                      padding: '2px 8px',
-                      borderRadius: 6,
-                      fontFamily: 'ui-monospace, Consolas, monospace',
-                    }}
-                  >
-                    {role}
-                  </span>
-                )
-              })}
-            </div>
-          </div>
-        )}
+        <TaskTitle label={data.label} capability={capability} isRunning={isRunning} isDone={isDone} />
+        <RolePills roles={roles} />
       </div>
-    </div>
-  )
-}
-
-/* -- Unassigned task node (compact capability + role) -- */
-
-function UnassignedDeskNode({ data, isRunning, isDone }: { data: DeskNodeData; isRunning: boolean; isDone: boolean }) {
-  const rolesRaw = data.meta?.role ?? ''
-  const roles = rolesRaw
-    .split(',')
-    .map((r) => r.trim())
-    .filter(Boolean)
-  const capability = data.meta?.capability
-
-  return (
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 8,
-      }}
-    >
-      {/* Title row */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-        <div>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)', lineHeight: 1.3 }}>{data.label}</div>
-          {capability && (
-            <div
-              style={{
-                fontSize: 11,
-                color: '#999',
-                marginTop: 2,
-                fontFamily: 'ui-monospace, Consolas, monospace',
-              }}
-            >
-              {capability}
-            </div>
-          )}
-        </div>
-        <div style={{ flexShrink: 0 }}>
-          {isRunning && (
-            <div
-              style={{
-                width: 12,
-                height: 12,
-                borderRadius: '50%',
-                border: '2px solid #e0e7ff',
-                borderTopColor: '#818cf8',
-                animation: 'spin 0.8s linear infinite',
-              }}
-            />
-          )}
-          {isDone && <HiCheck size={13} style={{ color: '#22c55e' }} />}
-        </div>
-      </div>
-
-      {/* Roles */}
-      {roles.length > 0 && (
-        <div>
-          <div
-            style={{
-              fontSize: 10,
-              fontWeight: 500,
-              color: '#aaa',
-              marginBottom: 5,
-            }}
-          >
-            Required roles
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-            {roles.map((role, i) => {
-              const palette = ROLE_PILL_COLORS[i % ROLE_PILL_COLORS.length]
-              return (
-                <span
-                  key={role}
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 500,
-                    color: palette.text,
-                    background: palette.bg,
-                    border: `1px solid ${palette.border}`,
-                    padding: '2px 8px',
-                    borderRadius: 6,
-                    fontFamily: 'ui-monospace, Consolas, monospace',
-                  }}
-                >
-                  {role}
-                </span>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }
@@ -296,13 +223,16 @@ export function DeskNode({ data }: { data: DeskNodeData }) {
   const isDone = data.status === 'done'
   const hasAssignee = !!data.assigneeId
 
+  const rolesRaw = data.meta?.role ?? ''
+  const roles = rolesRaw
+    .split(',')
+    .map((r) => r.trim())
+    .filter(Boolean)
+  const capability = data.meta?.capability
+
   return (
     <div style={{ position: 'relative' }}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
+      <NodeHandles />
 
       <div style={{ width: 220, position: 'relative' }}>
         {isRunning && (
@@ -321,41 +251,7 @@ export function DeskNode({ data }: { data: DeskNodeData }) {
         {hasAssignee ? (
           <AssignedDeskNode data={data} isRunning={isRunning} isDone={isDone} />
         ) : (
-          <div
-            style={{
-              background: '#fff',
-              borderRadius: 20,
-              border: `2px solid ${isRunning ? 'rgba(37,99,235,0.25)' : '#7c3aed'}`,
-              position: 'relative',
-              boxShadow: isRunning
-                ? '0 0 0 4px rgba(37,99,235,0.04), 0 4px 16px rgba(0,0,0,0.08)'
-                : '0 2px 12px rgba(0,0,0,0.06)',
-              opacity: isDone ? 0.5 : 1,
-              overflow: 'visible',
-            }}
-          >
-            {/* Type tab */}
-            <div
-              style={{
-                position: 'absolute',
-                top: -20,
-                left: 16,
-                zIndex: 1,
-                background: '#7c3aed',
-                color: '#fff',
-                fontSize: 10,
-                fontWeight: 600,
-                padding: '2px 8px 3px',
-                borderRadius: '6px 6px 0 0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 3,
-              }}
-            >
-              <TbSubtask size={10} />
-              Task
-            </div>
-
+          <CardNode color="#7c3aed" tabIcon={<TbSubtask size={10} />} tabLabel="Task" status={data.status}>
             {/* Assignee placeholder — same size as assigned area */}
             <div
               style={{
@@ -386,23 +282,18 @@ export function DeskNode({ data }: { data: DeskNodeData }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                 <span style={{ fontSize: 13, color: '#ccc', fontWeight: 600 }}>Unassigned</span>
-                <span style={{ fontSize: 11, color: '#ddd' }}>—</span>
+                <span style={{ fontSize: 11, color: '#ddd' }}>&mdash;</span>
               </div>
             </div>
 
             {/* Task content */}
-            <div style={{ padding: '4px 16px 14px' }}>
-              <UnassignedDeskNode data={data} isRunning={isRunning} isDone={isDone} />
+            <div style={{ padding: '4px 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <TaskTitle label={data.label} capability={capability} isRunning={isRunning} isDone={isDone} />
+              <RolePills roles={roles} />
             </div>
-          </div>
+          </CardNode>
         )}
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
     </div>
   )
 }

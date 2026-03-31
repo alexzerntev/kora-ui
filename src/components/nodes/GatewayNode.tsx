@@ -1,5 +1,5 @@
-import { Handle, Position } from '@xyflow/react'
 import type { FlowNodeKind } from '../../data/workflows'
+import { NodeHandles } from './shared'
 
 interface GatewayNodeData {
   kind: FlowNodeKind
@@ -15,11 +15,7 @@ export function GatewayNode({ data }: { data: GatewayNodeData }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <div style={{ position: 'relative', width: 72, height: 72 }}>
-        <Handle
-          type="target"
-          position={Position.Left}
-          style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 36 }}
-        />
+        <NodeHandles top={36} />
 
         {isRunning && (
           <div
@@ -58,12 +54,6 @@ export function GatewayNode({ data }: { data: GatewayNodeData }) {
             </>
           )}
         </svg>
-
-        <Handle
-          type="source"
-          position={Position.Right}
-          style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 36 }}
-        />
       </div>
 
       <span

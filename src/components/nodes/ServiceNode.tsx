@@ -1,6 +1,6 @@
-import { Handle, Position } from '@xyflow/react'
 import { TbSettings, TbWorld, TbDatabase, TbTerminal2 } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import { NodeHandles } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -45,11 +45,7 @@ export function ServiceNode({ data }: { data: ActivityNodeData }) {
 
   return (
     <div style={{ position: 'relative', width: 56, height: 56 }}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 28 }}
-      />
+      <NodeHandles top={28} />
 
       <div
         style={{
@@ -82,12 +78,6 @@ export function ServiceNode({ data }: { data: ActivityNodeData }) {
       >
         {data.label}
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 28 }}
-      />
     </div>
   )
 }

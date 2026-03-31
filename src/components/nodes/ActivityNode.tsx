@@ -1,4 +1,3 @@
-import { Handle, Position } from '@xyflow/react'
 import {
   TbSettings,
   TbCode,
@@ -20,6 +19,7 @@ import { TimerNode } from './TimerNode'
 import { CallNode } from './CallNode'
 import { SubprocessNode } from './SubprocessNode'
 import { TransactionNode } from './TransactionNode'
+import { NodeHandles } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -93,11 +93,7 @@ function GenericActivityNode({ data }: { data: ActivityNodeData }) {
           position: 'relative',
         }}
       >
-        <Handle
-          type="target"
-          position={Position.Left}
-          style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-        />
+        <NodeHandles />
 
         <div
           style={{
@@ -173,12 +169,6 @@ function GenericActivityNode({ data }: { data: ActivityNodeData }) {
             ✓
           </div>
         )}
-
-        <Handle
-          type="source"
-          position={Position.Right}
-          style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-        />
       </div>
     </div>
   )

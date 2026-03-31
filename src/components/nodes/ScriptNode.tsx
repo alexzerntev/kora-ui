@@ -1,6 +1,6 @@
-import { Handle, Position } from '@xyflow/react'
 import { TbDeviceDesktopCode } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import { NodeHandles } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -24,11 +24,7 @@ export function ScriptNode({ data }: { data: ActivityNodeData }) {
 
   return (
     <div style={{ position: 'relative', width: size, height: size }}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: cy }}
-      />
+      <NodeHandles top={cy} />
 
       {isRunning && (
         <div
@@ -85,12 +81,6 @@ export function ScriptNode({ data }: { data: ActivityNodeData }) {
       >
         {data.label}
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: cy }}
-      />
     </div>
   )
 }

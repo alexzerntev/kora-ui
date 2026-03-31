@@ -1,6 +1,6 @@
-import { Handle, Position } from '@xyflow/react'
 import { TbCreditCard } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import { GroupNode } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -10,74 +10,13 @@ interface ActivityNodeData {
 }
 
 export function TransactionNode({ data }: { data: ActivityNodeData }) {
-  const isDone = data.status === 'done'
-  const isRunning = data.status === 'running'
-
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-
-      {isRunning && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: -6,
-            borderRadius: 20,
-            border: '2px solid rgba(5,150,105,0.12)',
-            animation: 'ring-pulse 2.5s ease-in-out infinite',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-
-      <div
-        style={{
-          width: '100%',
-          height: '100%',
-          background: '#fafafa',
-          borderRadius: 16,
-          border: `2px solid ${isRunning ? 'rgba(5,150,105,0.25)' : '#059669'}`,
-          boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
-          opacity: isDone ? 0.5 : 1,
-        }}
-      >
-        {/* Type tab */}
-        <div
-          style={{
-            position: 'absolute',
-            top: -20,
-            left: 16,
-            zIndex: 1,
-            background: '#059669',
-            color: '#fff',
-            fontSize: 10,
-            fontWeight: 600,
-            padding: '2px 8px 3px',
-            borderRadius: '6px 6px 0 0',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 3,
-          }}
-        >
-          <TbCreditCard size={10} />
-          Transaction
-        </div>
-
-        {/* Title */}
-        <div style={{ padding: '10px 14px 0' }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)' }}>{data.label}</div>
-        </div>
-      </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{ background: 'transparent', border: 'none', width: 1, height: 1 }}
-      />
-    </div>
+    <GroupNode
+      color="#059669"
+      tabIcon={<TbCreditCard size={10} />}
+      tabLabel="Transaction"
+      label={data.label}
+      status={data.status}
+    />
   )
 }

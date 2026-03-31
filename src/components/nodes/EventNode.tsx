@@ -1,6 +1,6 @@
-import { Handle, Position } from '@xyflow/react'
 import { TbMail, TbClock, TbPlayerPlay, TbFlagCheck } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import { NodeHandles } from './shared'
 
 interface EventNodeData {
   kind: FlowNodeKind
@@ -30,13 +30,7 @@ export function EventNode({ data }: { data: EventNodeData }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <div style={{ position: 'relative', width: 48, height: 48 }}>
-        {!isStart && (
-          <Handle
-            type="target"
-            position={Position.Left}
-            style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 24 }}
-          />
-        )}
+        <NodeHandles top={24} target={!isStart} source={isStart} />
 
         {isRunning && (
           <div
@@ -70,14 +64,6 @@ export function EventNode({ data }: { data: EventNodeData }) {
         >
           {isEnd ? <TbFlagCheck size={20} /> : ICON_MAP[data.kind]}
         </div>
-
-        {isStart && (
-          <Handle
-            type="source"
-            position={Position.Right}
-            style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 24 }}
-          />
-        )}
       </div>
 
       <span

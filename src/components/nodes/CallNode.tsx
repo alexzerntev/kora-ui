@@ -1,6 +1,6 @@
-import { Handle, Position } from '@xyflow/react'
 import { TbRoute } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import { NodeHandles } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -17,11 +17,7 @@ export function CallNode({ data }: { data: ActivityNodeData }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
       <div style={{ position: 'relative', width: 64, height: 64 }}>
-        <Handle
-          type="target"
-          position={Position.Left}
-          style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 32 }}
-        />
+        <NodeHandles top={32} />
 
         {isRunning && (
           <div
@@ -53,12 +49,6 @@ export function CallNode({ data }: { data: ActivityNodeData }) {
         >
           <TbRoute size={28} strokeWidth={1.3} style={{ color: '#4f46e5' }} />
         </div>
-
-        <Handle
-          type="source"
-          position={Position.Right}
-          style={{ background: 'transparent', border: 'none', width: 1, height: 1, top: 32 }}
-        />
       </div>
 
       <span

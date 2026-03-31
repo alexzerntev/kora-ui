@@ -1,7 +1,8 @@
 import { useContext } from 'react'
-import { Handle, Position, useNodeId } from '@xyflow/react'
+import { useNodeId } from '@xyflow/react'
 import { Avatar } from '../Avatar'
 import { OrgHoverContext } from '../../contexts/OrgHoverContext'
+import { NodeHandles } from './shared'
 
 interface OrgNodeData {
   name: string
@@ -59,16 +60,7 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
         transition: 'opacity 0.2s ease',
       }}
     >
-      <Handle
-        type="target"
-        position={Position.Left}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          width: 1,
-          height: 1,
-        }}
-      />
+      <NodeHandles />
 
       {/* Avatar: People get initials circle, Agents get DiceBear, Roles/Tasks get nothing */}
       {type === 'person' && (
@@ -176,17 +168,6 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
           </div>
         )}
       </div>
-
-      <Handle
-        type="source"
-        position={Position.Right}
-        style={{
-          background: 'transparent',
-          border: 'none',
-          width: 1,
-          height: 1,
-        }}
-      />
     </div>
   )
 }
