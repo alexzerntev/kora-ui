@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useAllRuns } from '../providers/hooks'
 import type { ProcessRun, RunStatus } from '../providers/types'
 import { FilterChips } from '../components/shared/FilterChips'
@@ -168,6 +169,7 @@ const COLUMNS: Column<ProcessRun>[] = [
 
 export function Runs() {
   const { data: runs, loading } = useAllRuns()
+  const navigate = useNavigate()
   const [statusFilter, setStatusFilter] = useState<RunStatus | 'all'>('all')
   const [processFilter, setProcessFilter] = useState<string>('all')
   const [page, setPage] = useState(0)
@@ -204,8 +206,7 @@ export function Runs() {
   }
 
   const handleRowClick = (run: ProcessRun) => {
-    console.log(`Navigate to /runs/${run.id}`, run)
-    alert(`Run detail coming soon: ${run.id} (${run.workflowName})`)
+    navigate(`/processes/${run.workflowId}?run=${run.id}`)
   }
 
   return (

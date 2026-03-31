@@ -1,5 +1,6 @@
 import { TbDeviceDesktopCode } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { IconNode } from './shared'
 
 interface ActivityNodeData {
@@ -7,6 +8,7 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 export function ScriptNode({ data }: { data: ActivityNodeData }) {
@@ -22,7 +24,7 @@ export function ScriptNode({ data }: { data: ActivityNodeData }) {
   }).join(' ')
 
   return (
-    <IconNode icon={null} label={data.label} color="#7c3aed" size={size} status={data.status}>
+    <IconNode icon={null} label={data.label} color="#7c3aed" size={size} status={data.status} runState={data.runState}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ position: 'absolute', top: 0, left: 0 }}>
         <polygon
           points={points}

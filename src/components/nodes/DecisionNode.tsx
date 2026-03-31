@@ -1,5 +1,6 @@
 import { TbTable } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { CardNode } from './shared'
 
 interface ActivityNodeData {
@@ -7,13 +8,20 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 export function DecisionNode({ data }: { data: ActivityNodeData }) {
   const capability = data.meta?.decision
 
   return (
-    <CardNode color="#ea580c" tabIcon={<TbTable size={10} />} tabLabel="Decision" status={data.status}>
+    <CardNode
+      color="#ea580c"
+      tabIcon={<TbTable size={10} />}
+      tabLabel="Decision"
+      status={data.status}
+      runState={data.runState}
+    >
       {/* Title + subtitle */}
       <div style={{ padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
         <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)' }}>{data.label}</div>

@@ -1,5 +1,6 @@
 import { TbSettings, TbWorld, TbDatabase, TbTerminal2 } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { IconNode } from './shared'
 
 interface ActivityNodeData {
@@ -7,6 +8,7 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 /* Service nodes — circle with icon + label, like event nodes */
@@ -42,5 +44,7 @@ export function ServiceNode({ data }: { data: ActivityNodeData }) {
   const connectorType = data.meta?.connector ?? 'http'
   const style = SERVICE_STYLES[connectorType] ?? SERVICE_STYLES.http
 
-  return <IconNode icon={style.icon} label={data.label} color={style.color} status={data.status} />
+  return (
+    <IconNode icon={style.icon} label={data.label} color={style.color} status={data.status} runState={data.runState} />
+  )
 }

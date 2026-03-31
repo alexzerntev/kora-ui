@@ -1,19 +1,41 @@
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { NodeHandles } from './shared'
 
 interface GatewayNodeData {
   kind: FlowNodeKind
   label: string
   status: 'idle' | 'running' | 'done'
+  runState?: NodeRunState
+}
+
+const RUN_STATE_OPACITY: Record<NodeRunState, number> = {
+  done: 0.85,
+  running: 1,
+  idle: 0.4,
+  skipped: 0.15,
 }
 
 export function GatewayNode({ data }: { data: GatewayNodeData }) {
   const isExclusive = data.kind === 'gateway.exclusive'
-  const isDone = data.status === 'done'
-  const isRunning = data.status === 'running'
+  const isDone = data.runState ? data.runState === 'done' : data.status === 'done'
+  const isRunning = data.runState ? data.runState === 'running' : data.status === 'running'
+
+  const wrapperOpacity = data.runState ? RUN_STATE_OPACITY[data.runState] : isDone ? 0.5 : 1
+  const strokeColor = data.runState === 'done' ? '#10b981' : '#3b82f6'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 6,
+        opacity: wrapperOpacity,
+        transition: 'opacity 0.3s',
+        filter: data.runState === 'skipped' || data.runState === 'idle' ? 'grayscale(0.6)' : undefined,
+      }}
+    >
       <div style={{ position: 'relative', width: 72, height: 72 }}>
         <NodeHandles top={36} />
 
@@ -30,7 +52,7 @@ export function GatewayNode({ data }: { data: GatewayNodeData }) {
           />
         )}
 
-        <svg width={72} height={72} viewBox="0 0 72 72" style={{ opacity: isDone ? 0.5 : 1 }}>
+        <svg width={72} height={72} viewBox="0 0 72 72">
           <rect
             x="12"
             y="12"
@@ -39,18 +61,18 @@ export function GatewayNode({ data }: { data: GatewayNodeData }) {
             rx="4"
             transform="rotate(45 36 36)"
             fill="none"
-            stroke="#3b82f6"
+            stroke={strokeColor}
             strokeWidth="2.5"
           />
           {isExclusive ? (
             <>
-              <line x1="28" y1="28" x2="44" y2="44" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="44" y1="28" x2="28" y2="44" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="28" y1="28" x2="44" y2="44" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="44" y1="28" x2="28" y2="44" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" />
             </>
           ) : (
             <>
-              <line x1="36" y1="26" x2="36" y2="46" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
-              <line x1="26" y1="36" x2="46" y2="36" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="36" y1="26" x2="36" y2="46" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="26" y1="36" x2="46" y2="36" stroke={strokeColor} strokeWidth="2.5" strokeLinecap="round" />
             </>
           )}
         </svg>

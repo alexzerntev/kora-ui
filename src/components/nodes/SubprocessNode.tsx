@@ -1,5 +1,6 @@
 import { TbStack2 } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { GroupNode } from './shared'
 
 interface ActivityNodeData {
@@ -7,6 +8,7 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 export function SubprocessNode({ data }: { data: ActivityNodeData }) {
@@ -17,6 +19,7 @@ export function SubprocessNode({ data }: { data: ActivityNodeData }) {
       tabLabel="Subprocess"
       label={data.label}
       status={data.status}
+      runState={data.runState}
     />
   )
 }

@@ -5,6 +5,8 @@
 
 export type RunStatus = 'running' | 'completed' | 'failed' | 'paused'
 
+export type NodeRunState = 'done' | 'running' | 'idle' | 'skipped'
+
 export interface ProcessRun {
   id: string
   workflowId: string
@@ -17,6 +19,7 @@ export interface ProcessRun {
   stepsCompleted: number
   stepsTotal: number
   triggeredBy: string
+  nodeStates?: Record<string, NodeRunState>
 }
 
 export const PROCESS_RUNS: ProcessRun[] = [
@@ -31,6 +34,33 @@ export const PROCESS_RUNS: ProcessRun[] = [
     stepsCompleted: 5,
     stepsTotal: 11,
     triggeredBy: 'Incoming lead webhook',
+    nodeStates: {
+      // Start → t1 → t2 → sv1 → sv2 → sv3 done, sc1 running, dc1 running
+      // xg and everything after: idle on qualified branch, idle on default branch
+      s1: 'done',
+      t1: 'done',
+      t2: 'done',
+      sv1: 'done',
+      sv2: 'done',
+      sv3: 'done',
+      sc1: 'running',
+      dc1: 'running',
+      xg: 'idle',
+      sd1: 'idle',
+      rc1: 'idle',
+      sp1: 'idle',
+      'sp1-s': 'idle',
+      'sp1-a': 'idle',
+      'sp1-b': 'idle',
+      'sp1-e': 'idle',
+      tx1: 'idle',
+      'tx1-s': 'idle',
+      'tx1-a': 'idle',
+      'tx1-e': 'idle',
+      tm1: 'idle',
+      cl1: 'idle',
+      e1: 'idle',
+    },
   },
   {
     id: 'run-2',
@@ -43,6 +73,12 @@ export const PROCESS_RUNS: ProcessRun[] = [
     stepsCompleted: 3,
     stepsTotal: 4,
     triggeredBy: 'Alice Chen',
+    nodeStates: {
+      n10: 'done',
+      n11: 'done',
+      n12: 'running',
+      n13: 'idle',
+    },
   },
   {
     id: 'run-3',
@@ -56,6 +92,33 @@ export const PROCESS_RUNS: ProcessRun[] = [
     stepsCompleted: 11,
     stepsTotal: 11,
     triggeredBy: 'Scheduled trigger',
+    nodeStates: {
+      // Completed run — took the "score >= 80" (qualified) path
+      s1: 'done',
+      t1: 'done',
+      t2: 'done',
+      sv1: 'done',
+      sv2: 'done',
+      sv3: 'done',
+      sc1: 'done',
+      dc1: 'done',
+      xg: 'done',
+      sd1: 'done',
+      rc1: 'done',
+      sp1: 'done',
+      'sp1-s': 'done',
+      'sp1-a': 'done',
+      'sp1-b': 'done',
+      'sp1-e': 'done',
+      tx1: 'done',
+      'tx1-s': 'done',
+      'tx1-a': 'done',
+      'tx1-e': 'done',
+      e1: 'done',
+      // Default branch was not taken
+      tm1: 'skipped',
+      cl1: 'skipped',
+    },
   },
   {
     id: 'run-4',

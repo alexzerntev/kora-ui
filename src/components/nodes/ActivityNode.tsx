@@ -10,6 +10,7 @@ import {
   TbCreditCard,
 } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { ServiceNode } from './ServiceNode'
 import { ScriptNode } from './ScriptNode'
 import { DecisionNode } from './DecisionNode'
@@ -26,6 +27,14 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
+}
+
+const RUN_STATE_OPACITY: Record<NodeRunState, number> = {
+  done: 0.85,
+  running: 1,
+  idle: 0.4,
+  skipped: 0.15,
 }
 
 const ACTIVITY_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg: string; subtitle: string }> = {
@@ -44,8 +53,9 @@ const ACTIVITY_CONFIG: Record<string, { icon: React.ReactNode; color: string; bg
 
 function GenericActivityNode({ data }: { data: ActivityNodeData }) {
   const config = ACTIVITY_CONFIG[data.kind] ?? ACTIVITY_CONFIG.service
-  const isDone = data.status === 'done'
-  const isRunning = data.status === 'running'
+  const isDone = data.runState ? data.runState === 'done' : data.status === 'done'
+  const isRunning = data.runState ? data.runState === 'running' : data.status === 'running'
+  const wrapperOpacity = data.runState ? RUN_STATE_OPACITY[data.runState] : isDone ? 0.5 : 1
 
   let subtitle = config.subtitle
   if (data.meta) {
@@ -62,7 +72,14 @@ function GenericActivityNode({ data }: { data: ActivityNodeData }) {
   }
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div
+      style={{
+        position: 'relative',
+        opacity: wrapperOpacity,
+        transition: 'opacity 0.3s',
+        filter: data.runState === 'skipped' || data.runState === 'idle' ? 'grayscale(0.6)' : undefined,
+      }}
+    >
       {isRunning && (
         <div
           style={{
@@ -81,11 +98,10 @@ function GenericActivityNode({ data }: { data: ActivityNodeData }) {
           width: 220,
           background: '#fff',
           borderRadius: 14,
-          border: `1.5px solid ${isRunning ? 'rgba(37,99,235,0.25)' : '#e5e7eb'}`,
+          border: `1.5px solid ${data.runState === 'done' ? '#10b981' : isRunning ? 'rgba(37,99,235,0.25)' : '#e5e7eb'}`,
           boxShadow: isRunning
             ? '0 0 0 4px rgba(37,99,235,0.04), 0 2px 8px rgba(0,0,0,0.06)'
             : '0 1px 4px rgba(0,0,0,0.05)',
-          opacity: isDone ? 0.5 : 1,
           display: 'flex',
           alignItems: 'center',
           gap: 12,

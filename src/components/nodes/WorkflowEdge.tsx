@@ -1,6 +1,6 @@
 import { getBezierPath, type EdgeProps } from '@xyflow/react'
 
-type EdgeState = 'idle' | 'active' | 'done'
+type EdgeState = 'idle' | 'active' | 'done' | 'skipped'
 
 export function WorkflowEdge({
   sourceX,
@@ -23,23 +23,26 @@ export function WorkflowEdge({
 
   const state = (data?.state as EdgeState) ?? 'idle'
 
-  const colors = {
+  const colors: Record<EdgeState, string> = {
     idle: '#d4d4d4',
     active: '#3b82f6',
     done: '#4ade80',
+    skipped: '#e5e7eb',
   }
   const color = colors[state]
 
+  const opacity = state === 'skipped' ? 0.3 : 1
+
   return (
-    <g>
-      {/* Base track — always visible */}
+    <g style={{ opacity }}>
+      {/* Base track -- always visible */}
       <path
         d={edgePath}
         fill="none"
         stroke="#ebebeb"
         strokeWidth={3}
         strokeLinecap="round"
-        strokeDasharray={state === 'idle' ? '4 6' : undefined}
+        strokeDasharray={state === 'idle' || state === 'skipped' ? '4 6' : undefined}
       />
 
       {/* Done: solid colored overlay */}
@@ -66,10 +69,10 @@ export function WorkflowEdge({
       )}
 
       {/* Target endpoint dot */}
-      <circle cx={targetX} cy={targetY} r={state === 'idle' ? 3 : 4} fill={color} />
+      <circle cx={targetX} cy={targetY} r={state === 'idle' || state === 'skipped' ? 3 : 4} fill={color} />
 
       {/* Source endpoint dot */}
-      <circle cx={sourceX} cy={sourceY} r={3} fill={state === 'idle' ? '#d4d4d4' : color} />
+      <circle cx={sourceX} cy={sourceY} r={3} fill={state === 'idle' || state === 'skipped' ? '#d4d4d4' : color} />
 
       {/* Edge label */}
       {label && (

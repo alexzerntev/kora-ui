@@ -1,5 +1,6 @@
 import { TbRoute } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { IconNode } from './shared'
 
 interface ActivityNodeData {
@@ -7,6 +8,7 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 export function CallNode({ data }: { data: ActivityNodeData }) {
@@ -27,6 +29,7 @@ export function CallNode({ data }: { data: ActivityNodeData }) {
       color="#4f46e5"
       size={64}
       status={data.status}
+      runState={data.runState}
       labelGap={6}
     >
       {/* Portal circle */}

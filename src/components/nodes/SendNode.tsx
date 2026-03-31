@@ -4,6 +4,7 @@ import { TEAM, TYPE_COLORS } from '../../data/team'
 import { HiUser } from 'react-icons/hi2'
 import { RiRobot2Fill } from 'react-icons/ri'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { CardNode, SocketArea, TitleArea } from './shared'
 
 interface ActivityNodeData {
@@ -11,6 +12,7 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 const CHANNEL_ICONS: Record<string, { icon: React.ReactNode; color: string; bg: string; label: string }> = {
@@ -29,7 +31,13 @@ export function SendNode({ data }: { data: ActivityNodeData }) {
   const template = data.meta?.template
 
   return (
-    <CardNode color="#16a34a" tabIcon={<TbSend size={10} />} tabLabel="Send" status={data.status}>
+    <CardNode
+      color="#16a34a"
+      tabIcon={<TbSend size={10} />}
+      tabLabel="Send"
+      status={data.status}
+      runState={data.runState}
+    >
       {/* Socket area — channel icon or owner */}
       <SocketArea
         bg={channel ? channel.bg : ownerMember ? TYPE_COLORS[ownerMember.type].light : '#f5f5f5'}

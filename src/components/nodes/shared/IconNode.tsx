@@ -1,5 +1,13 @@
 import { NodeHandles } from './NodeHandles'
 import { hexToRgba } from './utils'
+import type { NodeRunState } from '../../../providers/types'
+
+const RUN_STATE_OPACITY: Record<NodeRunState, number> = {
+  done: 0.85,
+  running: 1,
+  idle: 0.4,
+  skipped: 0.15,
+}
 
 /**
  * Reusable wrapper for small icon-style process nodes.
@@ -13,7 +21,7 @@ import { hexToRgba } from './utils'
  * - Optional sub-label below the main label
  *
  * Used by: ServiceNode, TimerNode, CallNode
- * (ScriptNode is special — hexagon shape — so it keeps its own shape.)
+ * (ScriptNode is special -- hexagon shape -- so it keeps its own shape.)
  */
 export function IconNode({
   icon,
@@ -21,6 +29,7 @@ export function IconNode({
   color,
   size = 56,
   status,
+  runState,
   subLabel,
   labelGap = 4,
   children,
@@ -30,18 +39,29 @@ export function IconNode({
   color: string
   size?: number
   status: 'idle' | 'running' | 'done'
+  runState?: NodeRunState
   subLabel?: React.ReactNode
   labelGap?: number
   children?: React.ReactNode
 }) {
-  const isDone = status === 'done'
-  const isRunning = status === 'running'
+  const effectiveRunning = runState ? runState === 'running' : status === 'running'
+  const effectiveDone = runState ? runState === 'done' : status === 'done'
+  const wrapperOpacity = runState ? RUN_STATE_OPACITY[runState] : effectiveDone ? 0.5 : 1
 
   return (
-    <div style={{ position: 'relative', width: size, height: size }}>
+    <div
+      style={{
+        position: 'relative',
+        width: size,
+        height: size,
+        opacity: wrapperOpacity,
+        transition: 'opacity 0.3s',
+        filter: runState === 'skipped' || runState === 'idle' ? 'grayscale(0.6)' : undefined,
+      }}
+    >
       <NodeHandles top={size / 2} />
 
-      {isRunning && (
+      {effectiveRunning && (
         <div
           style={{
             position: 'absolute',
@@ -63,7 +83,6 @@ export function IconNode({
             alignItems: 'center',
             justifyContent: 'center',
             color,
-            opacity: isDone ? 0.5 : 1,
           }}
         >
           {icon}

@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
 import { useMemo } from 'react'
 import { ReactFlow, Background, Controls, type Node, type Edge, ConnectionLineType } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
@@ -7,10 +7,12 @@ import { EventNode } from '../components/nodes/EventNode'
 import { GatewayNode } from '../components/nodes/GatewayNode'
 import { ActivityNode } from '../components/nodes/ActivityNode'
 import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
-import { useProcess, useRunProcess } from '../providers/hooks'
+import { useProcess, useRunProcess, useRun } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
-import { TbArrowLeft } from 'react-icons/tb'
+import { TbArrowLeft, TbX } from 'react-icons/tb'
 import { RunProcessButton } from '../components/shared/RunProcessButton'
+import { StatusBadge } from '../components/shared/StatusBadge'
+import type { NodeRunState } from '../providers/types'
 
 const nodeTypes = {
   desk: DeskNode,
@@ -20,11 +22,27 @@ const nodeTypes = {
 }
 const edgeTypes = { workflow: WorkflowEdge }
 
+const STATUS_BADGE_COLORS: Record<string, { color: string; bg: string }> = {
+  running: { color: 'var(--color-status-done)', bg: '#ecfdf5' },
+  completed: { color: 'var(--color-status-done)', bg: '#ecfdf5' },
+  failed: { color: 'var(--color-status-failed)', bg: '#fef2f2' },
+  paused: { color: 'var(--color-status-processing)', bg: '#fffbeb' },
+}
+
 export function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const runId = searchParams.get('run')
   const { data: workflow, loading } = useProcess(id ?? '')
+  const { data: runData } = useRun(runId ?? '')
   const { run, running } = useRunProcess()
+
+  const nodeStates: Record<string, NodeRunState> | undefined = runData?.nodeStates
+
+  const clearRun = () => {
+    setSearchParams({})
+  }
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const nodes: Node[] = useMemo(() => {
@@ -157,13 +175,43 @@ export function WorkflowDetail() {
         assigneeSeed: node.assigneeSeed,
         assigneeType: node.assigneeType,
         meta: node.meta,
+        runState: nodeStates?.[node.id],
       },
     }))
-  }, [workflow])
+  }, [workflow, nodeStates])
 
   const edges: Edge[] = useMemo(() => {
     if (!workflow) return []
 
+    // If we have run state data, use it for edge styling
+    if (nodeStates) {
+      return workflow.edges.map((e, i) => {
+        const sourceState = nodeStates[e.from]
+        const targetState = nodeStates[e.to]
+
+        let state: string = 'idle'
+        if (sourceState === 'done' && targetState === 'done') {
+          state = 'done'
+        } else if (sourceState === 'done' && targetState === 'running') {
+          state = 'active'
+        } else if (sourceState === 'skipped' || targetState === 'skipped') {
+          state = 'skipped'
+        } else if (sourceState === 'running' && (targetState === 'idle' || !targetState)) {
+          state = 'idle'
+        }
+
+        return {
+          id: `e-${i}`,
+          source: e.from,
+          target: e.to,
+          type: 'workflow',
+          label: e.label,
+          data: { state },
+        }
+      })
+    }
+
+    // Original edge logic (no run context)
     const statusMap: Record<string, string> = {}
     workflow.nodes.forEach((n) => {
       statusMap[n.id] = n.status
@@ -186,7 +234,7 @@ export function WorkflowDetail() {
         data: { state },
       }
     })
-  }, [workflow])
+  }, [workflow, nodeStates])
 
   if (loading) {
     return <p style={{ padding: 32, color: 'var(--color-ink-secondary)' }}>Loading process...</p>
@@ -200,6 +248,8 @@ export function WorkflowDetail() {
   const totalCount = workflow.nodes.length
   const isRunning = workflow.nodes.some((n) => n.status === 'running')
 
+  const badgeCfg = runData ? STATUS_BADGE_COLORS[runData.status] : undefined
+
   return (
     <div
       style={{
@@ -209,7 +259,7 @@ export function WorkflowDetail() {
         minHeight: 0,
       }}
     >
-      {/* Top bar — in normal document flow */}
+      {/* Top bar -- in normal document flow */}
       <div
         style={{
           display: 'flex',
@@ -222,7 +272,7 @@ export function WorkflowDetail() {
         }}
       >
         <button
-          onClick={() => navigate('/processes')}
+          onClick={() => (runId ? navigate('/runs') : navigate('/processes'))}
           className="back-btn"
           style={{ margin: 0, width: 32, height: 32, justifyContent: 'center' }}
         >
@@ -235,7 +285,7 @@ export function WorkflowDetail() {
           )}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          {isRunning ? (
+          {isRunning && !runId ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
                 {doneCount}/{totalCount}
@@ -259,16 +309,87 @@ export function WorkflowDetail() {
                 />
               </div>
             </div>
-          ) : (
+          ) : !runId ? (
             <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>
               {workflow.lastRunAt
                 ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
                 : 'Never run'}
             </span>
+          ) : null}
+          {!runId && (
+            <RunProcessButton
+              schema={workflow.inputSchema}
+              onRun={(args) => run(workflow.id, args)}
+              disabled={running}
+            />
           )}
-          <RunProcessButton schema={workflow.inputSchema} onRun={(args) => run(workflow.id, args)} disabled={running} />
         </div>
       </div>
+
+      {/* Run info bar */}
+      {runId && runData && (
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            padding: '8px 20px',
+            background: '#f9fafb',
+            borderBottom: '1px solid rgba(0,0,0,0.06)',
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: 'var(--color-foreground-secondary)',
+            }}
+          >
+            Viewing run:
+          </span>
+          <span
+            style={{
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'var(--color-foreground)',
+              fontFamily: 'ui-monospace, Consolas, monospace',
+            }}
+          >
+            {runData.id}
+          </span>
+          {badgeCfg && <StatusBadge status={runData.status} color={badgeCfg.color} backgroundColor={badgeCfg.bg} />}
+          <span
+            style={{
+              fontSize: 11,
+              color: 'var(--color-foreground-muted)',
+            }}
+          >
+            {runData.stepsCompleted}/{runData.stepsTotal} steps
+          </span>
+          <div style={{ flex: 1 }} />
+          <button
+            onClick={clearRun}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              padding: '4px 10px',
+              borderRadius: 6,
+              border: '1px solid var(--color-border)',
+              background: '#fff',
+              color: 'var(--color-foreground-secondary)',
+              fontSize: 12,
+              fontWeight: 500,
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
+          >
+            <TbX size={14} />
+            Clear
+          </button>
+        </div>
+      )}
 
       {/* Full-bleed canvas */}
       <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>

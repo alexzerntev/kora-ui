@@ -1,5 +1,6 @@
 import { TbClock } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { IconNode } from './shared'
 
 interface ActivityNodeData {
@@ -7,6 +8,7 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 export function TimerNode({ data }: { data: ActivityNodeData }) {
@@ -28,6 +30,7 @@ export function TimerNode({ data }: { data: ActivityNodeData }) {
       label={data.label}
       color="#d97706"
       status={data.status}
+      runState={data.runState}
       subLabel={
         humanDuration ? (
           <span

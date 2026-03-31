@@ -1,5 +1,6 @@
 import { TbInbox } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
+import type { NodeRunState } from '../../providers/types'
 import { CardNode, SocketArea, TitleArea } from './shared'
 
 interface ActivityNodeData {
@@ -7,13 +8,20 @@ interface ActivityNodeData {
   label: string
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 export function ReceiveNode({ data }: { data: ActivityNodeData }) {
   const catchMessage = data.meta?.catch
 
   return (
-    <CardNode color="#0891b2" tabIcon={<TbInbox size={10} />} tabLabel="Receive" status={data.status}>
+    <CardNode
+      color="#0891b2"
+      tabIcon={<TbInbox size={10} />}
+      tabLabel="Receive"
+      status={data.status}
+      runState={data.runState}
+    >
       {/* Socket area — inbox icon */}
       <SocketArea bg="#ecfeff" borderColor="#0891b215">
         <TbInbox size={28} style={{ color: '#0891b2' }} />

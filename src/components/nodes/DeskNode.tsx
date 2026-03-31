@@ -3,6 +3,7 @@ import { HiUser, HiCheck } from 'react-icons/hi2'
 import { RiRobot2Fill } from 'react-icons/ri'
 import { TbSubtask } from 'react-icons/tb'
 import { TEAM, TYPE_COLORS } from '../../data/team'
+import type { NodeRunState } from '../../providers/types'
 import { CardNode, NodeHandles } from './shared'
 
 const ROLE_PILL_COLORS = [
@@ -14,6 +15,13 @@ const ROLE_PILL_COLORS = [
   { bg: '#ecfeff', text: '#0e7490', border: '#a5f3fc' }, // cyan
 ]
 
+const RUN_STATE_OPACITY: Record<NodeRunState, number> = {
+  done: 0.85,
+  running: 1,
+  idle: 0.4,
+  skipped: 0.15,
+}
+
 interface DeskNodeData {
   kind: string
   label: string
@@ -24,6 +32,7 @@ interface DeskNodeData {
   assigneeType?: 'human' | 'agent'
   status: 'idle' | 'running' | 'done'
   meta?: Record<string, string>
+  runState?: NodeRunState
 }
 
 /* -- Shared role pills + task title -- */
@@ -119,98 +128,108 @@ function AssignedDeskNode({ data, isRunning, isDone }: { data: DeskNodeData; isR
     .filter(Boolean)
   const capability = data.meta?.capability
 
+  const wrapperOpacity = data.runState ? RUN_STATE_OPACITY[data.runState] : isDone ? 0.5 : 1
+  const borderColor = data.runState === 'done' ? '#10b981' : isRunning ? 'rgba(37,99,235,0.25)' : '#7c3aed'
+
   return (
     <div
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = '#fafaf9'
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = '#fff'
-      }}
       style={{
-        background: '#fff',
-        borderRadius: 20,
-        overflow: 'visible',
-        border: `2px solid ${isRunning ? 'rgba(37,99,235,0.25)' : '#7c3aed'}`,
-        position: 'relative',
-        boxShadow: isRunning
-          ? '0 0 0 4px rgba(37,99,235,0.04), 0 4px 16px rgba(0,0,0,0.08)'
-          : '0 2px 12px rgba(0,0,0,0.06)',
-        opacity: isDone ? 0.5 : 1,
-        transition: 'background 0.15s',
+        opacity: wrapperOpacity,
+        transition: 'opacity 0.3s',
+        filter: data.runState === 'skipped' || data.runState === 'idle' ? 'grayscale(0.6)' : undefined,
       }}
     >
-      {/* Assignee area */}
       <div
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = '#fafaf9'
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = '#fff'
+        }}
         style={{
-          margin: 8,
-          borderRadius: 14,
-          padding: '16px 12px',
-          background: colorLight,
-          border: `1px solid ${TYPE_COLORS[data.assigneeType ?? 'agent'].dark}15`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 8,
-          overflow: 'hidden',
+          background: '#fff',
+          borderRadius: 20,
+          overflow: 'visible',
+          border: `2px solid ${borderColor}`,
+          position: 'relative',
+          boxShadow: isRunning
+            ? '0 0 0 4px rgba(37,99,235,0.04), 0 4px 16px rgba(0,0,0,0.08)'
+            : '0 2px 12px rgba(0,0,0,0.06)',
+          transition: 'background 0.15s',
         }}
       >
-        <div style={{ animation: isRunning ? 'worker-bob 2.5s ease-in-out infinite' : undefined }}>
-          <Avatar seed={data.assigneeSeed ?? ''} size={56} />
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ fontSize: 13, fontWeight: 650, color: 'var(--color-ink)' }}>
-              {memberData?.name ?? data.assigneeName}
-            </span>
-            <span
-              style={{
-                width: 16,
-                height: 16,
-                borderRadius: '50%',
-                background: isHuman ? 'var(--color-human)' : 'var(--color-agent)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: 9,
-                flexShrink: 0,
-              }}
-            >
-              {isHuman ? <HiUser /> : <RiRobot2Fill />}
-            </span>
+        {/* Assignee area */}
+        <div
+          style={{
+            margin: 8,
+            borderRadius: 14,
+            padding: '16px 12px',
+            background: colorLight,
+            border: `1px solid ${TYPE_COLORS[data.assigneeType ?? 'agent'].dark}15`,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ animation: isRunning ? 'worker-bob 2.5s ease-in-out infinite' : undefined }}>
+            <Avatar seed={data.assigneeSeed ?? ''} size={56} />
           </div>
-          <span style={{ fontSize: 11, color: 'var(--color-ink-secondary)' }}>{memberData?.role ?? ''}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{ fontSize: 13, fontWeight: 650, color: 'var(--color-ink)' }}>
+                {memberData?.name ?? data.assigneeName}
+              </span>
+              <span
+                style={{
+                  width: 16,
+                  height: 16,
+                  borderRadius: '50%',
+                  background: isHuman ? 'var(--color-human)' : 'var(--color-agent)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#fff',
+                  fontSize: 9,
+                  flexShrink: 0,
+                }}
+              >
+                {isHuman ? <HiUser /> : <RiRobot2Fill />}
+              </span>
+            </div>
+            <span style={{ fontSize: 11, color: 'var(--color-ink-secondary)' }}>{memberData?.role ?? ''}</span>
+          </div>
         </div>
-      </div>
 
-      {/* Type tab */}
-      <div
-        style={{
-          position: 'absolute',
-          top: -20,
-          left: 16,
-          zIndex: 1,
-          background: '#7c3aed',
-          color: '#fff',
-          fontSize: 10,
-          fontWeight: 600,
-          padding: '2px 8px 3px',
-          borderRadius: '6px 6px 0 0',
-          display: 'flex',
-          alignItems: 'center',
-          gap: 3,
-        }}
-      >
-        <TbSubtask size={10} />
-        Task
-      </div>
+        {/* Type tab */}
+        <div
+          style={{
+            position: 'absolute',
+            top: -20,
+            left: 16,
+            zIndex: 1,
+            background: '#7c3aed',
+            color: '#fff',
+            fontSize: 10,
+            fontWeight: 600,
+            padding: '2px 8px 3px',
+            borderRadius: '6px 6px 0 0',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+          }}
+        >
+          <TbSubtask size={10} />
+          Task
+        </div>
 
-      {/* Task content */}
-      <div style={{ padding: '4px 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        <TaskTitle label={data.label} capability={capability} isRunning={isRunning} isDone={isDone} />
-        <RolePills roles={roles} />
+        {/* Task content */}
+        <div style={{ padding: '4px 16px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <TaskTitle label={data.label} capability={capability} isRunning={isRunning} isDone={isDone} />
+          <RolePills roles={roles} />
+        </div>
       </div>
     </div>
   )
@@ -219,8 +238,8 @@ function AssignedDeskNode({ data, isRunning, isDone }: { data: DeskNodeData; isR
 /* -- Router -- */
 
 export function DeskNode({ data }: { data: DeskNodeData }) {
-  const isRunning = data.status === 'running'
-  const isDone = data.status === 'done'
+  const isRunning = data.runState ? data.runState === 'running' : data.status === 'running'
+  const isDone = data.runState ? data.runState === 'done' : data.status === 'done'
   const hasAssignee = !!data.assigneeId
 
   const rolesRaw = data.meta?.role ?? ''
@@ -251,8 +270,14 @@ export function DeskNode({ data }: { data: DeskNodeData }) {
         {hasAssignee ? (
           <AssignedDeskNode data={data} isRunning={isRunning} isDone={isDone} />
         ) : (
-          <CardNode color="#7c3aed" tabIcon={<TbSubtask size={10} />} tabLabel="Task" status={data.status}>
-            {/* Assignee placeholder — same size as assigned area */}
+          <CardNode
+            color="#7c3aed"
+            tabIcon={<TbSubtask size={10} />}
+            tabLabel="Task"
+            status={data.status}
+            runState={data.runState}
+          >
+            {/* Assignee placeholder -- same size as assigned area */}
             <div
               style={{
                 margin: 8,

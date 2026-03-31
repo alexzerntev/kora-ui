@@ -10,7 +10,7 @@ export type {
   SandboxNetwork,
   SandboxEgressRule,
 } from '../data/project'
-export type { ProcessRun, RunStatus, PendingAction, PendingActionType } from '../data/runs'
+export type { ProcessRun, RunStatus, NodeRunState, PendingAction, PendingActionType } from '../data/runs'
 export type { ActivityEntry } from '../data/activity'
 
 export { TYPE_COLORS } from '../data/team'
@@ -69,6 +69,9 @@ export interface DataProvider {
 
   /** List process runs for a specific workflow */
   getRunsForWorkflow(workflowId: string): Promise<ProcessRun[]>
+
+  /** Get a single run by ID */
+  getRun(runId: string): Promise<ProcessRun | undefined>
 
   /** List pending actions requiring human input */
   getPendingActions(): Promise<PendingAction[]>
