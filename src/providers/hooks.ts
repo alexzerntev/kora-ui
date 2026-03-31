@@ -13,6 +13,8 @@ import type {
   ActivityEntry,
   DataEvent,
   RunLogEntry,
+  Draft,
+  Release,
 } from './types'
 
 interface QueryResult<T> {
@@ -188,6 +190,16 @@ export function useRunProcess(): {
   )
 
   return { run, running }
+}
+
+export function useDrafts(refetchKey?: number): QueryResult<Draft[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getDrafts(), refetchKey)
+}
+
+export function useReleases(refetchKey?: number): QueryResult<Release[]> {
+  const provider = useDataProvider()
+  return useQuery(() => provider.getReleases(), refetchKey)
 }
 
 /**

@@ -12,6 +12,7 @@ import { Organization } from './pages/Organization'
 import { Administration } from './pages/Administration'
 import { Runs } from './pages/Runs'
 import { RunDetail } from './pages/RunDetail'
+import { Releases } from './pages/Releases'
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="/runs/:runId" element={<RunDetail />} />
             <Route path="/organization" element={<Organization />} />
             <Route path="/admin" element={<Administration />} />
+            <Route path="/releases" element={<Releases />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<Navigate to="/chat" replace />} />
           </Route>

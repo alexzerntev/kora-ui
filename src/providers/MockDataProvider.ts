@@ -7,6 +7,7 @@ import { ASSIGNMENTS } from '../data/assignments'
 import { PROJECT } from '../data/project'
 import { PROCESS_RUNS, PENDING_ACTIONS, RUN_LOGS } from '../data/runs'
 import { ACTIVITY_FEED } from '../data/activity'
+import { DRAFTS, RELEASES } from '../data/releases'
 
 const EVENT_TEMPLATES: (() => DataEvent)[] = [
   () => ({
@@ -132,6 +133,26 @@ export class MockDataProvider implements DataProvider {
 
   async runProcess(id: string, args?: Record<string, string>) {
     console.log(`[MockDataProvider] runProcess called`, { id, args })
+  }
+
+  async getDrafts() {
+    return DRAFTS
+  }
+
+  async getReleases() {
+    return RELEASES
+  }
+
+  async publishDraft(draftId: string) {
+    console.log(`[MockDataProvider] publishDraft called`, { draftId })
+  }
+
+  async discardDraft(draftId: string) {
+    console.log(`[MockDataProvider] discardDraft called`, { draftId })
+  }
+
+  async restoreRelease(releaseId: string) {
+    console.log(`[MockDataProvider] restoreRelease called`, { releaseId })
   }
 
   subscribe(callback: (event: DataEvent) => void): () => void {

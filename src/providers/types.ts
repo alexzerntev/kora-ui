@@ -20,6 +20,7 @@ export type {
   RunLogEntryType,
 } from '../data/runs'
 export type { ActivityEntry } from '../data/activity'
+export type { Draft, DraftChange, Release, ReleaseChange } from '../data/releases'
 
 export { TYPE_COLORS } from '../data/team'
 
@@ -31,6 +32,7 @@ import type { Assignment } from '../data/assignments'
 import type { Project } from '../data/project'
 import type { ProcessRun, PendingAction, RunLogEntry } from '../data/runs'
 import type { ActivityEntry } from '../data/activity'
+import type { Draft, Release } from '../data/releases'
 
 /** Real-time events emitted by the data provider */
 export type DataEvent =
@@ -92,6 +94,21 @@ export interface DataProvider {
 
   /** Run a process with optional input arguments */
   runProcess(id: string, args?: Record<string, string>): Promise<void>
+
+  /** List all active drafts */
+  getDrafts(): Promise<Draft[]>
+
+  /** List all releases */
+  getReleases(): Promise<Release[]>
+
+  /** Publish a draft (promotes it to a release) */
+  publishDraft(draftId: string): Promise<void>
+
+  /** Discard a draft */
+  discardDraft(draftId: string): Promise<void>
+
+  /** Restore a previous release as active */
+  restoreRelease(releaseId: string): Promise<void>
 
   /** Subscribe to real-time events — returns an unsubscribe function */
   subscribe(callback: (event: DataEvent) => void): () => void
