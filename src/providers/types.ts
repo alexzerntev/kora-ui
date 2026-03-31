@@ -64,6 +64,9 @@ export interface DataProvider {
   /** List active process runs with status */
   getProcessRuns(): Promise<ProcessRun[]>
 
+  /** List ALL process runs across all workflows */
+  getAllRuns(): Promise<ProcessRun[]>
+
   /** List process runs for a specific workflow */
   getRunsForWorkflow(workflowId: string): Promise<ProcessRun[]>
 

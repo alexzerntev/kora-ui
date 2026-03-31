@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom'
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { ReactFlow, Background, Controls, type Node, type Edge, ConnectionLineType } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { DeskNode } from '../components/nodes/DeskNode'
@@ -7,63 +7,10 @@ import { EventNode } from '../components/nodes/EventNode'
 import { GatewayNode } from '../components/nodes/GatewayNode'
 import { ActivityNode } from '../components/nodes/ActivityNode'
 import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
-import { useProcess, useRunProcess, useWorkflowRuns } from '../providers/hooks'
+import { useProcess, useRunProcess } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
-import { TbArrowLeft, TbCircleCheckFilled, TbCircleXFilled, TbPlayerPauseFilled } from 'react-icons/tb'
+import { TbArrowLeft } from 'react-icons/tb'
 import { RunProcessButton } from '../components/shared/RunProcessButton'
-import type { RunStatus } from '../providers/types'
-
-function statusIcon(status: RunStatus) {
-  switch (status) {
-    case 'running':
-      return (
-        <span
-          style={{
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: '#10b981',
-            display: 'inline-block',
-            flexShrink: 0,
-            boxShadow: '0 0 0 2px rgba(16,185,129,0.2)',
-          }}
-        />
-      )
-    case 'completed':
-      return <TbCircleCheckFilled size={16} color="#10b981" style={{ flexShrink: 0 }} />
-    case 'failed':
-      return <TbCircleXFilled size={16} color="#ef4444" style={{ flexShrink: 0 }} />
-    case 'paused':
-      return <TbPlayerPauseFilled size={14} color="#f59e0b" style={{ flexShrink: 0 }} />
-  }
-}
-
-function relativeTime(dateStr: string): string {
-  const now = new Date()
-  const then = new Date(dateStr)
-  const diffMs = now.getTime() - then.getTime()
-  const diffMin = Math.floor(diffMs / 60000)
-  if (diffMin < 1) return 'just now'
-  if (diffMin < 60) return `${diffMin}m ago`
-  const diffH = Math.floor(diffMin / 60)
-  if (diffH < 24) return `${diffH}h ago`
-  const diffD = Math.floor(diffH / 24)
-  return `${diffD}d ago`
-}
-
-const statusLabel: Record<RunStatus, string> = {
-  running: 'Running',
-  completed: 'Completed',
-  failed: 'Failed',
-  paused: 'Paused',
-}
-
-const statusColor: Record<RunStatus, string> = {
-  running: '#10b981',
-  completed: '#6b7280',
-  failed: '#ef4444',
-  paused: '#f59e0b',
-}
 
 const nodeTypes = {
   desk: DeskNode,
@@ -77,9 +24,7 @@ export function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: workflow, loading } = useProcess(id ?? '')
-  const { data: runs } = useWorkflowRuns(id ?? '')
   const { run, running } = useRunProcess()
-  const [runsSidebarOpen, setRunsSidebarOpen] = useState(true)
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const nodes: Node[] = useMemo(() => {
@@ -325,181 +270,33 @@ export function WorkflowDetail() {
         </div>
       </div>
 
-      {/* Content: sidebar + canvas */}
-      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        {/* Runs sidebar */}
-        {runs && runs.length > 0 && (
-          <div
+      {/* Full-bleed canvas */}
+      <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
+        <ReactFlow
+          nodes={nodes}
+          edges={edges}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.3 }}
+          connectionLineType={ConnectionLineType.Bezier}
+          proOptions={{ hideAttribution: true }}
+          nodesDraggable
+          nodesConnectable={false}
+          elementsSelectable
+        >
+          <Background gap={32} size={1} color="#e8e8e8" />
+          <Controls
+            showInteractive={false}
+            position="bottom-right"
             style={{
-              width: runsSidebarOpen ? 280 : 40,
-              flexShrink: 0,
-              borderRight: '1px solid rgba(0,0,0,0.06)',
-              background: '#fff',
-              display: 'flex',
-              flexDirection: 'column',
-              transition: 'width 0.2s ease',
+              borderRadius: 12,
+              border: '1px solid var(--color-border-light)',
               overflow: 'hidden',
+              background: '#fff',
             }}
-          >
-            {/* Sidebar header */}
-            <button
-              onClick={() => setRunsSidebarOpen(!runsSidebarOpen)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: runsSidebarOpen ? '14px 16px' : '14px 0',
-                justifyContent: runsSidebarOpen ? 'flex-start' : 'center',
-                background: 'none',
-                border: 'none',
-                borderBottom: '1px solid rgba(0,0,0,0.06)',
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-                flexShrink: 0,
-                width: '100%',
-              }}
-            >
-              <svg
-                width="10"
-                height="10"
-                viewBox="0 0 10 10"
-                style={{
-                  transform: runsSidebarOpen ? 'rotate(0deg)' : 'rotate(-90deg)',
-                  transition: 'transform 0.2s ease',
-                  flexShrink: 0,
-                }}
-              >
-                <path d="M2 3L5 6L8 3" stroke="#6b7280" strokeWidth="1.5" fill="none" strokeLinecap="round" />
-              </svg>
-              {runsSidebarOpen && (
-                <>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Runs</span>
-                  <span
-                    style={{
-                      fontSize: 10,
-                      fontWeight: 600,
-                      color: '#6b7280',
-                      background: '#f3f4f6',
-                      borderRadius: 4,
-                      padding: '1px 6px',
-                    }}
-                  >
-                    {runs.length}
-                  </span>
-                </>
-              )}
-            </button>
-
-            {/* Run items */}
-            {runsSidebarOpen && (
-              <div
-                style={{
-                  flex: 1,
-                  overflowY: 'auto',
-                  padding: '8px 10px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 4,
-                }}
-              >
-                {runs.map((r) => (
-                  <div
-                    key={r.id}
-                    style={{
-                      padding: '10px 10px',
-                      borderRadius: 8,
-                      background: 'rgba(0,0,0,0.02)',
-                      cursor: 'pointer',
-                      transition: 'background 0.12s ease',
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = 'rgba(0,0,0,0.05)'
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = 'rgba(0,0,0,0.02)'
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      {statusIcon(r.status)}
-                      <span
-                        style={{ fontSize: 12, fontWeight: 600, color: '#111827', flex: 1, minWidth: 0 }}
-                        className="truncate"
-                      >
-                        {r.triggeredBy}
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 600,
-                          color: statusColor[r.status],
-                          textTransform: 'capitalize',
-                        }}
-                      >
-                        {statusLabel[r.status]}
-                      </span>
-                    </div>
-                    {r.status === 'running' && (
-                      <div style={{ fontSize: 11, color: '#6b7280', marginBottom: 4 }}>Step: {r.currentStep}</div>
-                    )}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <div
-                        style={{
-                          flex: 1,
-                          height: 3,
-                          background: '#f3f4f6',
-                          borderRadius: 2,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <div
-                          style={{
-                            height: '100%',
-                            width: `${r.progress}%`,
-                            background: statusColor[r.status],
-                            borderRadius: 2,
-                          }}
-                        />
-                      </div>
-                      <span style={{ fontSize: 10, color: '#9ca3af', flexShrink: 0 }}>
-                        {r.stepsCompleted}/{r.stepsTotal}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 10, color: '#9ca3af', marginTop: 4 }}>{relativeTime(r.startedAt)}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ReactFlow canvas */}
-        <div style={{ flex: 1, overflow: 'hidden', background: '#fff' }}>
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            fitView
-            fitViewOptions={{ padding: 0.3 }}
-            connectionLineType={ConnectionLineType.Bezier}
-            proOptions={{ hideAttribution: true }}
-            nodesDraggable
-            nodesConnectable={false}
-            elementsSelectable
-          >
-            <Background gap={32} size={1} color="#e8e8e8" />
-            <Controls
-              showInteractive={false}
-              position="bottom-right"
-              style={{
-                borderRadius: 12,
-                border: '1px solid var(--color-border-light)',
-                overflow: 'hidden',
-                background: '#fff',
-              }}
-            />
-          </ReactFlow>
-        </div>
+          />
+        </ReactFlow>
       </div>
     </div>
   )

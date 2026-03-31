@@ -106,6 +106,10 @@ export class MockDataProvider implements DataProvider {
     return PROCESS_RUNS
   }
 
+  async getAllRuns() {
+    return PROCESS_RUNS
+  }
+
   async getRunsForWorkflow(workflowId: string) {
     return PROCESS_RUNS.filter((r) => r.workflowId === workflowId)
   }

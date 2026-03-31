@@ -11,6 +11,7 @@ export {
   useAssignments,
   useProject,
   useProcessRuns,
+  useAllRuns,
   usePendingActions,
   useActivityFeed,
   useSubscription,

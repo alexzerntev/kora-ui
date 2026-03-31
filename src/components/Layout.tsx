@@ -7,13 +7,15 @@ import {
   TbSettings,
   TbSitemap,
   TbBuildingCommunity,
-  TbPlus,
+  TbEdit,
   TbMessage,
+  TbPlayerPlay,
 } from 'react-icons/tb'
 
 const NAV_ITEMS = [
-  { to: '/chat', icon: TbPlus, label: 'New Chat' },
+  { to: '/chat', icon: TbEdit, label: 'Assistant' },
   { to: '/processes', icon: TbRoute, label: 'Processes' },
+  { to: '/runs', icon: TbPlayerPlay, label: 'Runs' },
   { to: '/organization', icon: TbSitemap, label: 'Organization' },
   { to: '/admin', icon: TbBuildingCommunity, label: 'Administration' },
 ]
@@ -185,7 +187,23 @@ export function Layout() {
             padding: collapsed ? '4px 8px' : '4px 10px',
           }}
         >
-          {/* Recent chats */}
+          {/* Recent label */}
+          {!collapsed && (
+            <div
+              style={{
+                fontSize: 10.5,
+                fontWeight: 600,
+                color: '#9ca3af',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase' as const,
+                padding: '0 12px',
+                marginTop: 8,
+                marginBottom: 4,
+              }}
+            >
+              Recent
+            </div>
+          )}
           <div
             className="sidebar-scroll"
             style={{
@@ -195,7 +213,6 @@ export function Layout() {
               display: 'flex',
               flexDirection: 'column' as const,
               gap: 1,
-              marginTop: 6,
             }}
           >
             {RECENT_CHATS.map((chat) => {
