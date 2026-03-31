@@ -1,6 +1,6 @@
 import { TbSettings, TbWorld, TbDatabase, TbTerminal2 } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
-import { NodeHandles } from './shared'
+import { IconNode } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -41,43 +41,6 @@ const SERVICE_STYLES: Record<string, { icon: React.ReactNode; color: string }> =
 export function ServiceNode({ data }: { data: ActivityNodeData }) {
   const connectorType = data.meta?.connector ?? 'http'
   const style = SERVICE_STYLES[connectorType] ?? SERVICE_STYLES.http
-  const isDone = data.status === 'done'
 
-  return (
-    <div style={{ position: 'relative', width: 56, height: 56 }}>
-      <NodeHandles top={28} />
-
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: style.color,
-          opacity: isDone ? 0.5 : 1,
-        }}
-      >
-        {style.icon}
-      </div>
-
-      {/* Label positioned below, outside the node bounds */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '100%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          marginTop: 4,
-          fontSize: 11,
-          fontWeight: 600,
-          color: 'var(--color-ink-secondary)',
-          whiteSpace: 'nowrap',
-          textAlign: 'center',
-        }}
-      >
-        {data.label}
-      </div>
-    </div>
-  )
+  return <IconNode icon={style.icon} label={data.label} color={style.color} status={data.status} />
 }

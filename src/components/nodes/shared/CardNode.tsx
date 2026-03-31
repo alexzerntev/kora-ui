@@ -1,4 +1,5 @@
 import { NodeHandles } from './NodeHandles'
+import { hexToRgba } from './utils'
 
 /**
  * Reusable card wrapper for card-style process nodes.
@@ -31,9 +32,9 @@ export function CardNode({
   const isDone = status === 'done'
 
   // Derive a 25%-opacity version of the color for the running border
-  const runningBorderColor = colorToRunningBorder(color)
+  const runningBorderColor = hexToRgba(color, 0.25)
   // Derive a 10%-opacity version for the pulse ring
-  const pulseRingColor = colorToRunningBorder(color, 0.1)
+  const pulseRingColor = hexToRgba(color, 0.1)
 
   return (
     <div style={{ position: 'relative' }}>
@@ -90,18 +91,4 @@ export function CardNode({
       </div>
     </div>
   )
-}
-
-/**
- * Convert a hex color to an rgba string at a given alpha.
- * Handles both #rrggbb and short forms.
- */
-function colorToRunningBorder(hex: string, alpha = 0.25): string {
-  // If already rgba, return as-is (shouldn't happen, but guard)
-  if (hex.startsWith('rgba')) return hex
-
-  const r = parseInt(hex.slice(1, 3), 16)
-  const g = parseInt(hex.slice(3, 5), 16)
-  const b = parseInt(hex.slice(5, 7), 16)
-  return `rgba(${r},${g},${b},${alpha})`
 }

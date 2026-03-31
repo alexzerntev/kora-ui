@@ -1,3 +1,6 @@
 export { NodeHandles } from './NodeHandles'
 export { CardNode } from './CardNode'
 export { GroupNode } from './GroupNode'
+export { IconNode } from './IconNode'
+export { SocketArea, TitleArea } from './CardContent'
+export { hexToRgba } from './utils'

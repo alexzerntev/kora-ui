@@ -1,6 +1,6 @@
 import { TbClock } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
-import { NodeHandles } from './shared'
+import { IconNode } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -10,8 +10,6 @@ interface ActivityNodeData {
 }
 
 export function TimerNode({ data }: { data: ActivityNodeData }) {
-  const isDone = data.status === 'done'
-  const isRunning = data.status === 'running'
   const duration = data.meta?.duration
 
   // Parse ISO duration to human readable
@@ -25,61 +23,13 @@ export function TimerNode({ data }: { data: ActivityNodeData }) {
     : ''
 
   return (
-    <div style={{ position: 'relative', width: 56, height: 56 }}>
-      <NodeHandles top={28} />
-
-      {isRunning && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: -6,
-            borderRadius: '50%',
-            border: '2px solid rgba(217,119,6,0.15)',
-            animation: 'ring-pulse 2.5s ease-in-out infinite',
-            pointerEvents: 'none',
-          }}
-        />
-      )}
-
-      <div
-        style={{
-          width: 56,
-          height: 56,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#d97706',
-          opacity: isDone ? 0.5 : 1,
-        }}
-      >
-        <TbClock size={56} strokeWidth={1.2} />
-      </div>
-
-      <div
-        style={{
-          position: 'absolute',
-          top: '100%',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          marginTop: 4,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 2,
-        }}
-      >
-        <span
-          style={{
-            fontSize: 11,
-            fontWeight: 600,
-            color: 'var(--color-ink-secondary)',
-            whiteSpace: 'nowrap',
-            textAlign: 'center',
-          }}
-        >
-          {data.label}
-        </span>
-        {humanDuration && (
+    <IconNode
+      icon={<TbClock size={56} strokeWidth={1.2} />}
+      label={data.label}
+      color="#d97706"
+      status={data.status}
+      subLabel={
+        humanDuration ? (
           <span
             style={{
               fontSize: 10,
@@ -90,8 +40,8 @@ export function TimerNode({ data }: { data: ActivityNodeData }) {
           >
             {humanDuration}
           </span>
-        )}
-      </div>
-    </div>
+        ) : undefined
+      }
+    />
   )
 }

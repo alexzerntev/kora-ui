@@ -1,6 +1,6 @@
 import { TbInbox } from 'react-icons/tb'
 import type { FlowNodeKind } from '../../data/workflows'
-import { CardNode } from './shared'
+import { CardNode, SocketArea, TitleArea } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -15,39 +15,13 @@ export function ReceiveNode({ data }: { data: ActivityNodeData }) {
   return (
     <CardNode color="#0891b2" tabIcon={<TbInbox size={10} />} tabLabel="Receive" status={data.status}>
       {/* Socket area — inbox icon */}
-      <div
-        style={{
-          margin: 8,
-          borderRadius: 14,
-          padding: '16px 12px',
-          background: '#ecfeff',
-          border: '1px solid #0891b215',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 6,
-        }}
-      >
+      <SocketArea bg="#ecfeff" borderColor="#0891b215">
         <TbInbox size={28} style={{ color: '#0891b2' }} />
         <span style={{ fontSize: 12, fontWeight: 600, color: '#0891b2' }}>Inbox</span>
-      </div>
+      </SocketArea>
 
       {/* Title + message type */}
-      <div style={{ padding: '4px 16px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)' }}>{data.label}</div>
-        {catchMessage && (
-          <div
-            style={{
-              fontSize: 11,
-              color: '#999',
-              fontFamily: 'ui-monospace, Consolas, monospace',
-            }}
-          >
-            {catchMessage}
-          </div>
-        )}
-      </div>
+      <TitleArea label={data.label} meta={catchMessage} />
     </CardNode>
   )
 }

@@ -4,7 +4,7 @@ import { TEAM, TYPE_COLORS } from '../../data/team'
 import { HiUser } from 'react-icons/hi2'
 import { RiRobot2Fill } from 'react-icons/ri'
 import type { FlowNodeKind } from '../../data/workflows'
-import { CardNode } from './shared'
+import { CardNode, SocketArea, TitleArea } from './shared'
 
 interface ActivityNodeData {
   kind: FlowNodeKind
@@ -31,19 +31,9 @@ export function SendNode({ data }: { data: ActivityNodeData }) {
   return (
     <CardNode color="#16a34a" tabIcon={<TbSend size={10} />} tabLabel="Send" status={data.status}>
       {/* Socket area — channel icon or owner */}
-      <div
-        style={{
-          margin: 8,
-          borderRadius: 14,
-          padding: '16px 12px',
-          background: channel ? channel.bg : ownerMember ? TYPE_COLORS[ownerMember.type].light : '#f5f5f5',
-          border: `1px solid ${channel ? channel.color + '15' : '#e5e5e5'}`,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 6,
-        }}
+      <SocketArea
+        bg={channel ? channel.bg : ownerMember ? TYPE_COLORS[ownerMember.type].light : '#f5f5f5'}
+        borderColor={channel ? channel.color + '15' : '#e5e5e5'}
       >
         {channel ? (
           <>
@@ -78,23 +68,10 @@ export function SendNode({ data }: { data: ActivityNodeData }) {
             <span style={{ fontSize: 11, color: '#aaa' }}>Send</span>
           </>
         )}
-      </div>
+      </SocketArea>
 
       {/* Title + template */}
-      <div style={{ padding: '4px 16px 14px', display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-ink)' }}>{data.label}</div>
-        {template && (
-          <div
-            style={{
-              fontSize: 11,
-              color: '#999',
-              fontFamily: 'ui-monospace, Consolas, monospace',
-            }}
-          >
-            {template}
-          </div>
-        )}
-      </div>
+      <TitleArea label={data.label} meta={template} />
     </CardNode>
   )
 }
