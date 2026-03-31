@@ -1,7 +1,7 @@
 export type { TeamMember, AgentMember, MemoryEntry, TaskRun } from '../data/team'
 export type { Role } from '../data/roles'
 export type { Task } from '../data/tasks'
-export type { FlowNodeKind, WorkflowNode, Workflow } from '../data/workflows'
+export type { FlowNodeKind, WorkflowNode, Workflow, WorkflowInputField } from '../data/workflows'
 export type { Assignment } from '../data/assignments'
 export type {
   Project,
@@ -69,6 +69,9 @@ export interface DataProvider {
 
   /** Get recent activity feed entries */
   getActivityFeed(): Promise<ActivityEntry[]>
+
+  /** Run a process with optional input arguments */
+  runProcess(id: string, args?: Record<string, string>): Promise<void>
 
   /** Subscribe to real-time events — returns an unsubscribe function */
   subscribe(callback: (event: DataEvent) => void): () => void

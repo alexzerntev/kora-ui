@@ -144,6 +144,32 @@ export function useActivityFeed(refetchKey?: number): QueryResult<ActivityEntry[
 }
 
 /**
+ * Run a process with optional input arguments.
+ * Returns { run, running } — call `run(id, args?)` to trigger.
+ */
+export function useRunProcess(): {
+  run: (id: string, args?: Record<string, string>) => Promise<void>
+  running: boolean
+} {
+  const provider = useDataProvider()
+  const [running, setRunning] = useState(false)
+
+  const run = useCallback(
+    async (id: string, args?: Record<string, string>) => {
+      setRunning(true)
+      try {
+        await provider.runProcess(id, args)
+      } finally {
+        setRunning(false)
+      }
+    },
+    [provider],
+  )
+
+  return { run, running }
+}
+
+/**
  * Subscribe to real-time events from the data provider.
  * Returns the list of recent events (newest first) and a refetchKey
  * that increments on each event — pass it to other hooks to trigger re-fetches.

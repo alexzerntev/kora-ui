@@ -114,6 +114,10 @@ export class MockDataProvider implements DataProvider {
     return ACTIVITY_FEED
   }
 
+  async runProcess(id: string, args?: Record<string, string>) {
+    console.log(`[MockDataProvider] runProcess called`, { id, args })
+  }
+
   subscribe(callback: (event: DataEvent) => void): () => void {
     let timer: ReturnType<typeof setTimeout> | null = null
 

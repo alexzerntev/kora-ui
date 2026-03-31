@@ -36,11 +36,21 @@ export interface WorkflowNode {
   style?: { width: number; height: number }
 }
 
+export interface WorkflowInputField {
+  name: string
+  type: 'string' | 'number' | 'boolean'
+  label: string
+  required: boolean
+  placeholder?: string
+  defaultValue?: string
+}
+
 export interface Workflow {
   id: string
   name: string
   description: string
   lastRunAt?: string
+  inputSchema?: WorkflowInputField[]
   nodes: WorkflowNode[]
   edges: { from: string; to: string; label?: string }[]
 }
@@ -51,6 +61,30 @@ export const WORKFLOWS: Workflow[] = [
     name: 'Lead Processing Pipeline',
     description: 'Full lead intake with scoring, routing, and follow-up — all node types',
     lastRunAt: '2026-03-22T09:15:00Z',
+    inputSchema: [
+      {
+        name: 'leadEmail',
+        type: 'string',
+        label: 'Lead Email',
+        required: true,
+        placeholder: 'lead@example.com',
+      },
+      {
+        name: 'leadSource',
+        type: 'string',
+        label: 'Lead Source',
+        required: true,
+        placeholder: 'e.g. website, referral, ad campaign',
+      },
+      {
+        name: 'priority',
+        type: 'string',
+        label: 'Priority',
+        required: false,
+        placeholder: 'normal',
+        defaultValue: 'normal',
+      },
+    ],
     nodes: [
       {
         id: 's1',

@@ -7,10 +7,11 @@ import { EventNode } from '../components/nodes/EventNode'
 import { GatewayNode } from '../components/nodes/GatewayNode'
 import { ActivityNode } from '../components/nodes/ActivityNode'
 import { WorkflowEdge } from '../components/nodes/WorkflowEdge'
-import { useProcess } from '../providers/hooks'
+import { useProcess, useRunProcess } from '../providers/hooks'
 import { getReactFlowType, getNodeDimsForNode } from '../utils/layout'
 import { TbArrowLeft } from 'react-icons/tb'
 import { FloatingHeader } from '../components/shared/FloatingHeader'
+import { RunProcessButton } from '../components/shared/RunProcessButton'
 
 const nodeTypes = {
   desk: DeskNode,
@@ -24,6 +25,7 @@ export function WorkflowDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { data: workflow, loading } = useProcess(id ?? '')
+  const { run, running } = useRunProcess()
 
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const nodes: Node[] = useMemo(() => {
@@ -222,37 +224,44 @@ export function WorkflowDetail() {
           </button>
         }
         right={
-          isRunning ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
-                {doneCount}/{totalCount}
-              </span>
-              <div
-                style={{
-                  width: 80,
-                  height: 4,
-                  background: '#f3f4f6',
-                  borderRadius: 2,
-                  overflow: 'hidden',
-                }}
-              >
+          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+            {isRunning ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#6b7280' }}>
+                  {doneCount}/{totalCount}
+                </span>
                 <div
                   style={{
-                    height: '100%',
-                    width: `${(doneCount / totalCount) * 100}%`,
-                    background: 'var(--color-status-done)',
+                    width: 80,
+                    height: 4,
+                    background: '#f3f4f6',
                     borderRadius: 2,
+                    overflow: 'hidden',
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${(doneCount / totalCount) * 100}%`,
+                      background: 'var(--color-status-done)',
+                      borderRadius: 2,
+                    }}
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
-            <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>
-              {workflow.lastRunAt
-                ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-                : 'Never run'}
-            </span>
-          )
+            ) : (
+              <span style={{ fontSize: 12, fontWeight: 500, color: '#9ca3af' }}>
+                {workflow.lastRunAt
+                  ? `Last run ${new Date(workflow.lastRunAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                  : 'Never run'}
+              </span>
+            )}
+            <RunProcessButton
+              schema={workflow.inputSchema}
+              onRun={(args) => run(workflow.id, args)}
+              disabled={running}
+            />
+          </div>
         }
       />
 
