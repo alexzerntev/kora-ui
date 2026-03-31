@@ -1,105 +1,123 @@
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Workflow } from '../providers/types'
-import { useProcesses } from '../providers/hooks'
-import { TbArrowsShuffle } from 'react-icons/tb'
-import { Avatar } from '../components/Avatar'
+import { useProcesses, useAllRuns } from '../providers/hooks'
+import { DataTable } from '../components/shared/DataTable'
+import type { Column } from '../components/shared/DataTable'
 
-function WorkflowCard({ workflow }: { workflow: Workflow }) {
-  const navigate = useNavigate()
-  const doneCount = workflow.nodes.filter((n) => n.status === 'done').length
-  const runningCount = workflow.nodes.filter((n) => n.status === 'running').length
-  const totalCount = workflow.nodes.length
+function formatRelativeTime(dateStr: string): string {
+  const now = new Date('2026-03-30T12:00:00Z')
+  const date = new Date(dateStr)
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHr = Math.floor(diffMin / 60)
+  const diffDay = Math.floor(diffHr / 24)
 
-  // Unique assignees (from task nodes only)
-  const assignees = workflow.nodes
-    .filter((n) => n.kind === 'task' && n.assigneeId)
-    .reduce(
-      (acc, n) => {
-        if (!acc.find((a) => a.id === n.assigneeId)) {
-          acc.push({ id: n.assigneeId!, seed: n.assigneeSeed!, name: n.assigneeName! })
-        }
-        return acc
-      },
-      [] as { id: string; seed: string; name: string }[],
-    )
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffHr < 24) return `${diffHr}h ago`
+  if (diffDay === 1) return 'yesterday'
+  return `${diffDay}d ago`
+}
 
-  return (
-    <div onClick={() => navigate(`/processes/${workflow.id}`)} className="content-card" style={{ padding: 24 }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
-        <div>
-          <h3 style={{ fontSize: 17, fontWeight: 700, color: 'var(--color-ink)', marginBottom: 4 }}>{workflow.name}</h3>
-          <p style={{ fontSize: 13, color: 'var(--color-ink-secondary)', lineHeight: 1.5 }}>{workflow.description}</p>
-        </div>
-        <TbArrowsShuffle size={20} style={{ color: 'var(--color-ink-muted)', flexShrink: 0, marginTop: 2 }} />
-      </div>
-
-      {/* Progress bar */}
-      <div style={{ marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--color-ink-secondary)' }}>
-            {doneCount}/{totalCount} tasks complete
-          </span>
-          {runningCount > 0 && (
-            <span style={{ fontSize: 11, fontWeight: 600, color: '#b45309' }}>{runningCount} running</span>
-          )}
-        </div>
-        <div style={{ height: 4, background: 'var(--color-bg-hover)', borderRadius: 2, overflow: 'hidden' }}>
-          <div
-            style={{
-              height: '100%',
-              width: `${(doneCount / totalCount) * 100}%`,
-              background: 'var(--color-status-done)',
-              borderRadius: 2,
-              transition: 'width 0.3s ease',
-            }}
-          />
-        </div>
-      </div>
-
-      {/* Footer: assignees + task count */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        {/* Stacked avatars */}
-        <div style={{ display: 'flex' }}>
-          {assignees.map((a, i) => (
-            <div
-              key={a.id}
-              title={a.name}
-              style={{
-                marginLeft: i > 0 ? -10 : 0,
-                borderRadius: '50%',
-                border: '2px solid #fff',
-                width: 32,
-                height: 32,
-                overflow: 'hidden',
-                position: 'relative',
-                zIndex: assignees.length - i,
-              }}
-            >
-              <Avatar seed={a.seed} size={28} />
-            </div>
-          ))}
-        </div>
-
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 600,
-            color: 'var(--color-ink-muted)',
-            background: 'var(--color-bg-hover)',
-            padding: '4px 12px',
-            borderRadius: 20,
-          }}
-        >
-          {totalCount} tasks
-        </span>
-      </div>
-    </div>
-  )
+function truncate(str: string, max: number): string {
+  return str.length > max ? str.slice(0, max) + '...' : str
 }
 
 export function Workflows() {
+  const navigate = useNavigate()
   const { data: workflows, loading } = useProcesses()
+  const { data: runs } = useAllRuns()
+
+  // Count active (running) runs per workflow
+  const activeRunsByWorkflow = useMemo(() => {
+    if (!runs) return {} as Record<string, number>
+    const counts: Record<string, number> = {}
+    for (const run of runs) {
+      if (run.status === 'running') {
+        counts[run.workflowId] = (counts[run.workflowId] ?? 0) + 1
+      }
+    }
+    return counts
+  }, [runs])
+
+  const columns: Column<Workflow>[] = useMemo(
+    () => [
+      {
+        key: 'name',
+        header: 'Name',
+        width: '1.5fr',
+        render: (w) => (
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)' }}>{w.name}</span>
+        ),
+      },
+      {
+        key: 'description',
+        header: 'Description',
+        width: '2fr',
+        render: (w) => (
+          <span
+            style={{
+              fontSize: 13,
+              color: 'var(--color-foreground-secondary)',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {truncate(w.description, 50)}
+          </span>
+        ),
+      },
+      {
+        key: 'nodes',
+        header: 'Nodes',
+        width: '80px',
+        render: (w) => (
+          <span style={{ fontSize: 13, color: 'var(--color-foreground-muted)', fontVariantNumeric: 'tabular-nums' }}>
+            {w.nodes.length}
+          </span>
+        ),
+      },
+      {
+        key: 'lastRun',
+        header: 'Last Run',
+        width: '100px',
+        render: (w) => (
+          <span style={{ fontSize: 12, color: 'var(--color-foreground-muted)' }}>
+            {w.lastRunAt ? formatRelativeTime(w.lastRunAt) : 'Never'}
+          </span>
+        ),
+      },
+      {
+        key: 'status',
+        header: 'Status',
+        width: '100px',
+        render: (w) => {
+          const active = activeRunsByWorkflow[w.id] ?? 0
+          if (active > 0) {
+            return (
+              <span
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: '#b45309',
+                  background: '#fffbeb',
+                  padding: '3px 10px',
+                  borderRadius: 12,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {active} active
+              </span>
+            )
+          }
+          return <span style={{ fontSize: 12, color: 'var(--color-foreground-muted)' }}>Idle</span>
+        },
+      },
+    ],
+    [activeRunsByWorkflow],
+  )
 
   return (
     <div style={{ maxWidth: 1100 }}>
@@ -109,13 +127,14 @@ export function Workflows() {
       </header>
 
       {loading ? (
-        <p style={{ color: 'var(--color-ink-secondary)', padding: 32 }}>Loading processes...</p>
+        <p style={{ color: 'var(--color-foreground-muted)', padding: 32 }}>Loading processes...</p>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 16 }}>
-          {(workflows ?? []).map((w) => (
-            <WorkflowCard key={w.id} workflow={w} />
-          ))}
-        </div>
+        <DataTable
+          columns={columns}
+          data={workflows ?? []}
+          onRowClick={(w) => navigate(`/processes/${w.id}`)}
+          rowKey={(w) => w.id}
+        />
       )}
     </div>
   )
