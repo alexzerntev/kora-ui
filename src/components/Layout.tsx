@@ -11,7 +11,10 @@ import {
   TbMessage,
   TbPlayerPlay,
   TbHistory,
+  TbDots,
+  TbArchive,
 } from 'react-icons/tb'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 
 const NAV_ITEMS = [
   { to: '/chat', icon: TbEdit, label: 'Assistant' },
@@ -23,11 +26,11 @@ const NAV_ITEMS = [
 ]
 
 const RECENT_CHATS = [
-  { id: 'c1', title: 'Set up onboarding workflow' },
-  { id: 'c2', title: 'Add QA agent to team' },
-  { id: 'c3', title: 'Review task dependencies' },
-  { id: 'c4', title: 'Configure Slack connector' },
-  { id: 'c5', title: 'Sprint planning automation' },
+  { id: 'c1', title: 'Set up onboarding workflow', pendingChanges: 2 },
+  { id: 'c2', title: 'Add QA agent to team', pendingChanges: 0 },
+  { id: 'c3', title: 'Review task dependencies', pendingChanges: 4 },
+  { id: 'c4', title: 'Configure Slack connector', pendingChanges: 0 },
+  { id: 'c5', title: 'Sprint planning automation', pendingChanges: 0 },
 ]
 
 function SidebarNavItem({
@@ -85,7 +88,14 @@ function SidebarNavItem({
 
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [archivedChats, setArchivedChats] = useState<Set<string>>(new Set())
   const location = useLocation()
+
+  const visibleChats = RECENT_CHATS.filter((chat) => !archivedChats.has(chat.id))
+
+  const handleArchiveChat = (chatId: string) => {
+    setArchivedChats((prev) => new Set(prev).add(chatId))
+  }
 
   const isChat = location.pathname === '/chat' || location.pathname.startsWith('/chat/')
   const isWorkflowDetail = /^\/processes\/\w+/.test(location.pathname)
@@ -218,46 +228,139 @@ export function Layout() {
               gap: 1,
             }}
           >
-            {RECENT_CHATS.map((chat) => {
+            {visibleChats.map((chat) => {
               const chatActive = location.pathname === `/chat/${chat.id}`
               return (
-                <NavLink
+                <div
                   key={chat.id}
-                  to={`/chat/${chat.id}`}
-                  title={collapsed ? chat.title : undefined}
+                  className="chat-sidebar-item group"
                   style={{
+                    position: 'relative',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: collapsed ? 'center' : undefined,
-                    padding: collapsed ? '7px 0' : '7px 12px',
                     borderRadius: 8,
-                    fontSize: 13,
-                    fontWeight: chatActive ? 500 : 400,
-                    color: chatActive ? '#111827' : '#9ca3af',
-                    background: chatActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
-                    transition: 'all 0.12s ease',
-                    textDecoration: 'none',
-                    letterSpacing: '-0.01em',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!chatActive) {
-                      e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)'
-                      e.currentTarget.style.color = '#6b7280'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!chatActive) {
-                      e.currentTarget.style.background = 'transparent'
-                      e.currentTarget.style.color = '#9ca3af'
-                    }
                   }}
                 >
-                  {collapsed ? (
-                    <TbMessage size={16} strokeWidth={1.7} />
-                  ) : (
-                    <span className="truncate">{chat.title}</span>
+                  <NavLink
+                    to={`/chat/${chat.id}`}
+                    title={collapsed ? chat.title : undefined}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: collapsed ? 'center' : undefined,
+                      padding: collapsed ? '7px 0' : '7px 12px',
+                      paddingRight: collapsed ? undefined : '28px',
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: chatActive ? 500 : 400,
+                      color: chatActive ? '#111827' : '#9ca3af',
+                      background: chatActive ? 'rgba(0, 0, 0, 0.04)' : 'transparent',
+                      transition: 'all 0.12s ease',
+                      textDecoration: 'none',
+                      letterSpacing: '-0.01em',
+                      flex: 1,
+                      minWidth: 0,
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!chatActive) {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.03)'
+                        e.currentTarget.style.color = '#6b7280'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!chatActive) {
+                        e.currentTarget.style.background = 'transparent'
+                        e.currentTarget.style.color = '#9ca3af'
+                      }
+                    }}
+                  >
+                    {collapsed ? (
+                      <div style={{ position: 'relative' }}>
+                        <TbMessage size={16} strokeWidth={1.7} />
+                        {chat.pendingChanges > 0 && (
+                          <span
+                            style={{
+                              position: 'absolute',
+                              top: -4,
+                              right: -6,
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              background: 'var(--color-status-processing)',
+                              border: '1.5px solid rgba(255,255,255,0.8)',
+                            }}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <>
+                        <span className="truncate" style={{ flex: 1 }}>
+                          {chat.title}
+                        </span>
+                        {chat.pendingChanges > 0 && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontWeight: 600,
+                              color: 'var(--color-status-processing)',
+                              background: 'rgba(245, 158, 11, 0.1)',
+                              padding: '1px 6px',
+                              borderRadius: 4,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {chat.pendingChanges}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+
+                  {/* Three-dot menu — visible on hover only */}
+                  {!collapsed && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          className="chat-menu-trigger"
+                          style={{
+                            position: 'absolute',
+                            right: 6,
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: 20,
+                            height: 20,
+                            borderRadius: 4,
+                            border: 'none',
+                            background: 'transparent',
+                            color: 'var(--color-foreground-muted)',
+                            cursor: 'pointer',
+                            opacity: 0,
+                            transition: 'opacity 0.12s ease, background 0.12s ease',
+                            padding: 0,
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)'
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = 'transparent'
+                          }}
+                        >
+                          <TbDots size={14} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="start" side="right" sideOffset={4}>
+                        <DropdownMenuItem onClick={() => handleArchiveChat(chat.id)} className="gap-2 text-xs">
+                          <TbArchive size={14} />
+                          Archive
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
-                </NavLink>
+                </div>
               )
             })}
           </div>

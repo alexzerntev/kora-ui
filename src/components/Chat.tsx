@@ -1,80 +1,164 @@
-import { useState, useRef, useEffect } from 'react'
-import { TbArrowUp } from 'react-icons/tb'
-import { HiUsers } from 'react-icons/hi2'
-import { TbArrowsShuffle } from 'react-icons/tb'
-import { TeamArtifact } from './TeamArtifact'
-import { WorkflowArtifact } from './WorkflowArtifact'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
+import { TbArrowUp, TbChevronDown, TbChevronRight, TbPlus } from 'react-icons/tb'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
 }
 
-type ArtifactTab = 'team' | 'workflow'
-
-const TAB_META: Record<ArtifactTab, { label: string; icon: React.ReactNode }> = {
-  team: { label: 'Team', icon: <HiUsers size={14} /> },
-  workflow: { label: 'Workflow', icon: <TbArrowsShuffle size={14} /> },
+interface ChatChange {
+  action: 'added' | 'modified' | 'removed'
+  type: string
+  entity: string
 }
 
-export function Chat() {
+interface ChatSession {
+  messages: Message[]
+  changes: ChatChange[]
+}
+
+const MOCK_CHANGES: ChatChange[] = [
+  { action: 'added', type: 'Role', entity: 'QA Reviewer' },
+  { action: 'added', type: 'Task', entity: 'Automated Testing' },
+  { action: 'modified', type: 'Process', entity: 'Client Onboarding' },
+  { action: 'removed', type: 'Agent', entity: 'Legacy Bot' },
+]
+
+const CHAT_SESSIONS: Record<string, ChatSession> = {
+  c1: {
+    messages: [
+      {
+        role: 'user',
+        content:
+          'I need to set up an onboarding workflow for new clients. It should include document collection, contract signing, and a welcome call.',
+      },
+      {
+        role: 'assistant',
+        content:
+          "I've created a Client Onboarding v2 process with three main stages: document collection via a receive task, contract signing through a send task with DocuSign, and a welcome call scheduled via timer. I also updated the Project Lead role to include onboarding oversight responsibilities.",
+      },
+    ],
+    changes: [
+      { action: 'added', type: 'Process', entity: 'Client Onboarding v2' },
+      { action: 'modified', type: 'Role', entity: 'Project Lead' },
+    ],
+  },
+  c2: {
+    messages: [
+      {
+        role: 'user',
+        content: 'Can you add a QA agent to the team?',
+      },
+      {
+        role: 'assistant',
+        content:
+          'Done! I added a QA Agent with automated testing capabilities. It uses the gpt-4o model profile and has access to the test runner tools.',
+      },
+    ],
+    changes: [],
+  },
+  c3: {
+    messages: [
+      {
+        role: 'user',
+        content:
+          'I want to review the task dependencies in our current processes. Are there any circular dependencies or bottlenecks?',
+      },
+      {
+        role: 'assistant',
+        content:
+          'I analyzed all process flows and found a few issues. The "Review Submission" task in the Approval process was waiting on "Final Check" which itself depended on "Review Submission" -- a circular dependency. I also found that the "Data Validation" task is a bottleneck: 4 downstream tasks depend on it with no parallel paths.',
+      },
+      {
+        role: 'user',
+        content: 'Can you fix the circular dependency and add a parallel path for the data validation bottleneck?',
+      },
+      {
+        role: 'assistant',
+        content:
+          'I\'ve resolved both issues. The circular dependency is broken by introducing a new "Pre-Review Check" task that feeds into "Review Submission" independently. For the data validation bottleneck, I added a parallel gateway so that "Format Check" and "Schema Validation" run concurrently before merging back.',
+      },
+    ],
+    changes: [
+      { action: 'added', type: 'Task', entity: 'Pre-Review Check' },
+      { action: 'modified', type: 'Process', entity: 'Approval Flow' },
+      { action: 'added', type: 'Gateway', entity: 'Validation Split' },
+      { action: 'modified', type: 'Task', entity: 'Data Validation' },
+    ],
+  },
+  c4: {
+    messages: [
+      {
+        role: 'user',
+        content: 'Help me configure the Slack connector for notifications.',
+      },
+      {
+        role: 'assistant',
+        content:
+          "I've set up the Slack connector with a webhook URL placeholder. You'll need to add your actual Slack webhook URL in the connector settings under Administration. The connector is configured for the #notifications channel by default.",
+      },
+    ],
+    changes: [],
+  },
+  c5: {
+    messages: [
+      {
+        role: 'user',
+        content: 'I want to automate our sprint planning process.',
+      },
+      {
+        role: 'assistant',
+        content:
+          "I can help with that. What does your current sprint planning look like? Do you have a backlog prioritization step, capacity planning, or standup scheduling that you'd like to automate?",
+      },
+    ],
+    changes: [],
+  },
+}
+
+const ACTION_COLORS: Record<string, { color: string; bg: string }> = {
+  added: { color: 'var(--color-status-done)', bg: '#ecfdf5' },
+  modified: { color: 'var(--color-status-processing)', bg: '#fffbeb' },
+  removed: { color: 'var(--color-status-failed)', bg: '#fef2f2' },
+}
+
+function ChatInner({ id }: { id?: string }) {
+  const session = useMemo(() => (id ? CHAT_SESSIONS[id] : undefined), [id])
+
   const [message, setMessage] = useState('')
-  const [hasInteracted, setHasInteracted] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(session?.messages ?? [])
   const [isTyping, setIsTyping] = useState(false)
-  const [showArtifact, setShowArtifact] = useState(false)
-  const [artifactTabs, setArtifactTabs] = useState<ArtifactTab[]>([])
-  const [activeTab, setActiveTab] = useState<ArtifactTab>('team')
-  const [sendCount, setSendCount] = useState(0)
+  const [pendingChanges, setPendingChanges] = useState<ChatChange[]>(session?.changes ?? [])
+  const [changesExpanded, setChangesExpanded] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setMessage(e.target.value)
-  }
+  const hasMessages = messages.length > 0 || isTyping
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages, isTyping])
 
   const handleSend = () => {
-    if (!message.trim()) return
-    if (!hasInteracted) setHasInteracted(true)
-    const userMsg = message.trim()
-    const currentSend = sendCount + 1
-    setSendCount(currentSend)
+    const text = message.trim()
+    if (!text) return
+
+    setMessages((prev) => [...prev, { role: 'user', content: text }])
     setMessage('')
-    setMessages((prev) => [...prev, { role: 'user', content: userMsg }])
     setIsTyping(true)
 
-    if (currentSend === 1) {
-      setTimeout(() => {
-        setIsTyping(false)
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: "I'll add a new research analyst agent to your team. Here's your updated roster:",
-          },
-        ])
-        setArtifactTabs(['team'])
-        setActiveTab('team')
-        setShowArtifact(true)
-      }, 1200)
-    } else if (currentSend === 2) {
-      setTimeout(() => {
-        setIsTyping(false)
-        setMessages((prev) => [
-          ...prev,
-          {
-            role: 'assistant',
-            content: "Great \u2014 I'll wire up a workflow for that. Watch it come together:",
-          },
-        ])
-        setArtifactTabs((prev) => (prev.includes('workflow') ? prev : [...prev, 'workflow']))
-        setActiveTab('workflow')
-      }, 1200)
-    } else {
-      setTimeout(() => {
-        setIsTyping(false)
-        setMessages((prev) => [...prev, { role: 'assistant', content: "Got it! I'll work on that." }])
-      }, 800)
-    }
+    setTimeout(() => {
+      setIsTyping(false)
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content:
+            "I've made some changes based on your request. I added a QA Reviewer role, an Automated Testing task, updated the Client Onboarding process, and removed the Legacy Bot agent. You can review the changes below and add them to unreleased when ready.",
+        },
+      ])
+      setPendingChanges(MOCK_CHANGES)
+    }, 1500)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -84,192 +168,296 @@ export function Chat() {
     }
   }
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isTyping])
+  const handleAddToUnreleased = () => {
+    setPendingChanges([])
+    setChangesExpanded(false)
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        content:
+          'Changes have been added to unreleased. You can review them in the Versions page and release when ready.',
+      },
+    ])
+  }
 
-  return (
-    <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-      {/* ── Artifact panel (left) ── */}
+  // Before any messages: centered layout
+  if (!hasMessages) {
+    return (
       <div
-        className="artifact-panel"
         style={{
-          width: showArtifact ? '50%' : '0%',
-          opacity: showArtifact ? 1 : 0,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flex: 1,
+          minHeight: 0,
+          background: '#fff',
+          padding: '0 24px',
         }}
       >
-        <div
-          style={{
-            minWidth: 400,
-            display: 'flex',
-            flexDirection: 'column',
-            height: '100%',
-          }}
-        >
-          {/* Tab bar */}
-          {artifactTabs.length > 0 && (
-            <div className="artifact-tab-bar">
-              {artifactTabs.map((tab) => (
-                <button
-                  key={tab}
-                  className={`artifact-tab ${activeTab === tab ? 'active' : ''}`}
-                  onClick={() => setActiveTab(tab)}
-                >
-                  {TAB_META[tab].icon}
-                  {TAB_META[tab].label}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Tab content */}
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              overflowY: 'auto',
-              display: activeTab === 'team' ? 'block' : 'none',
-            }}
-          >
-            {artifactTabs.includes('team') && <TeamArtifact />}
-          </div>
-          <div
-            style={{
-              flex: 1,
-              minHeight: 0,
-              display: activeTab === 'workflow' ? 'flex' : 'none',
-              flexDirection: 'column',
-            }}
-          >
-            {artifactTabs.includes('workflow') && <WorkflowArtifact />}
+        <div style={{ fontSize: 20, fontWeight: 600, color: 'var(--color-foreground)', marginBottom: 6 }}>
+          Kora Assistant
+        </div>
+        <div style={{ fontSize: 14, color: 'var(--color-foreground-muted)', marginBottom: 24 }}>
+          Ask me to modify processes, roles, or any resource.
+        </div>
+        <div style={{ width: '100%', maxWidth: 680 }}>
+          <div className="chat-input-container">
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Ask the assistant..."
+              rows={1}
+              style={{
+                flex: 1,
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                resize: 'none',
+                fontSize: 14,
+                lineHeight: 1.5,
+                fontFamily: 'inherit',
+                color: 'var(--color-foreground)',
+                padding: '8px 0',
+              }}
+            />
+            <button
+              className="chat-send-btn"
+              data-active={message.trim().length > 0 ? 'true' : 'false'}
+              onClick={handleSend}
+            >
+              <TbArrowUp size={18} />
+            </button>
           </div>
         </div>
       </div>
+    )
+  }
 
-      {/* ── Chat panel (right) ── */}
+  // After first interaction
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        flex: 1,
+        minHeight: 0,
+        background: '#fff',
+        alignItems: 'center',
+      }}
+    >
+      {/* Messages area */}
       <div
         style={{
-          flex: showArtifact ? '0 0 50%' : '1 1 100%',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: hasInteracted ? 'flex-end' : 'center',
-          minWidth: 0,
-          background: '#fff',
-          transition: 'flex 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+          flex: 1,
+          overflowY: 'auto',
+          padding: '24px 24px',
+          width: '100%',
+          maxWidth: 728,
         }}
       >
-        {/* Messages area */}
-        {hasInteracted && messages.length > 0 && (
-          <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+        {messages.map((msg, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
+              marginBottom: 16,
+            }}
+          >
             <div
               style={{
-                maxWidth: showArtifact ? 520 : 680,
-                width: '100%',
-                margin: '0 auto',
-                padding: '24px 24px 0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 16,
-                transition: 'max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                maxWidth: '80%',
+                padding: '10px 16px',
+                borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+                background: msg.role === 'user' ? 'var(--color-foreground)' : 'var(--color-surface-hover)',
+                color: msg.role === 'user' ? '#fff' : 'var(--color-foreground)',
+                fontSize: 14,
+                lineHeight: 1.6,
               }}
             >
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  style={{
-                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                    maxWidth: '85%',
-                  }}
-                >
-                  <div className={msg.role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant'}>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
+              {msg.content}
+            </div>
+          </div>
+        ))}
 
-              {isTyping && (
-                <div style={{ alignSelf: 'flex-start' }}>
-                  <div className="chat-bubble-assistant" style={{ display: 'flex', gap: 4, padding: '12px 16px' }}>
-                    <span className="typing-dot" />
-                    <span className="typing-dot" style={{ animationDelay: '0.15s' }} />
-                    <span className="typing-dot" style={{ animationDelay: '0.3s' }} />
-                  </div>
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
+        {isTyping && (
+          <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: 16 }}>
+            <div
+              style={{
+                padding: '10px 16px',
+                borderRadius: '16px 16px 16px 4px',
+                background: 'var(--color-surface-hover)',
+                display: 'flex',
+                gap: 4,
+              }}
+            >
+              <span className="typing-dot" />
+              <span className="typing-dot" style={{ animationDelay: '0.2s' }} />
+              <span className="typing-dot" style={{ animationDelay: '0.4s' }} />
             </div>
           </div>
         )}
 
-        {/* Welcome + input */}
-        <div
-          style={{
-            maxWidth: showArtifact ? 520 : 680,
-            width: '100%',
-            margin: '0 auto',
-            padding: '0 24px',
-            display: 'flex',
-            flexDirection: 'column',
-            transition: 'max-width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        >
-          {!showArtifact && (
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Bottom area: changes accordion + input */}
+      <div
+        style={{
+          flexShrink: 0,
+          width: '100%',
+          maxWidth: 728,
+          padding: '0 24px 20px',
+        }}
+      >
+        {/* Pending changes accordion */}
+        {pendingChanges.length > 0 && (
+          <div
+            style={{
+              border: '2px solid var(--color-status-processing)',
+              borderRadius: 12,
+              marginBottom: 10,
+              overflow: 'hidden',
+            }}
+          >
+            {/* Accordion header */}
             <div
               style={{
-                marginBottom: hasInteracted ? 16 : 24,
-                textAlign: hasInteracted ? 'left' : 'center',
-                transition: 'margin-bottom 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                padding: '10px 14px',
+                cursor: 'pointer',
+                background: 'rgba(245, 158, 11, 0.04)',
               }}
+              onClick={() => setChangesExpanded(!changesExpanded)}
             >
-              <h1
+              {changesExpanded ? (
+                <TbChevronDown size={16} style={{ color: 'var(--color-foreground-secondary)', flexShrink: 0 }} />
+              ) : (
+                <TbChevronRight size={16} style={{ color: 'var(--color-foreground-secondary)', flexShrink: 0 }} />
+              )}
+              <span
                 style={{
-                  fontSize: hasInteracted ? 15 : 22,
-                  fontWeight: hasInteracted ? 400 : 700,
-                  color: '#0d0d0d',
-                  lineHeight: 1.5,
-                  letterSpacing: '-0.02em',
-                  transition: 'font-size 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'var(--color-foreground)',
+                  marginLeft: 8,
+                  flex: 1,
                 }}
               >
-                {hasInteracted ? "Hi! I'm your Offload assistant." : 'What would you like to automate?'}
-              </h1>
-              {!hasInteracted && (
-                <p style={{ fontSize: 15, color: '#999', lineHeight: 1.7, marginTop: 8 }}>
-                  I can set up workflows, create tasks, add team members, and build connectors to your tools.
-                </p>
-              )}
-            </div>
-          )}
-
-          <div style={{ paddingBottom: 24 }}>
-            <div className="chat-input-container">
-              <textarea
-                value={message}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                placeholder="Message Offload..."
-                rows={1}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: 15,
-                  color: '#0d0d0d',
-                  background: 'transparent',
-                  padding: '10px 0',
-                  resize: 'none',
-                  lineHeight: 1.5,
-                  fontFamily: 'inherit',
+                {pendingChanges.length} pending change{pendingChanges.length !== 1 ? 's' : ''}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleAddToUnreleased()
                 }}
-              />
-              <button className="chat-send-btn" data-active={message.trim() ? 'true' : 'false'} onClick={handleSend}>
-                <TbArrowUp size={16} strokeWidth={2.5} />
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  padding: '5px 12px',
+                  borderRadius: 6,
+                  border: 'none',
+                  background: 'var(--color-status-processing)',
+                  color: '#fff',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  transition: 'opacity 0.12s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.opacity = '0.85'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.opacity = '1'
+                }}
+              >
+                <TbPlus size={13} strokeWidth={2.5} />
+                Add to unreleased
               </button>
             </div>
+
+            {/* Accordion content */}
+            {changesExpanded && (
+              <div
+                style={{
+                  padding: '8px 14px 12px',
+                  borderTop: '1px solid rgba(245, 158, 11, 0.15)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 6,
+                }}
+              >
+                {pendingChanges.map((change, i) => {
+                  const style = ACTION_COLORS[change.action]
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: style.color,
+                          background: style.bg,
+                          padding: '2px 7px',
+                          borderRadius: 4,
+                          textTransform: 'capitalize',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {change.action}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'var(--color-foreground-muted)' }}>{change.type}:</span>
+                      <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--color-foreground)' }}>
+                        {change.entity}
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
+        )}
+
+        {/* Input */}
+        <div className="chat-input-container">
+          <textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask the assistant..."
+            rows={1}
+            style={{
+              flex: 1,
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              resize: 'none',
+              fontSize: 14,
+              lineHeight: 1.5,
+              fontFamily: 'inherit',
+              color: 'var(--color-foreground)',
+              padding: '8px 0',
+            }}
+          />
+          <button
+            className="chat-send-btn"
+            data-active={message.trim().length > 0 ? 'true' : 'false'}
+            onClick={handleSend}
+          >
+            <TbArrowUp size={18} />
+          </button>
         </div>
       </div>
     </div>
   )
+}
+
+export function Chat() {
+  const { id } = useParams<{ id: string }>()
+  return <ChatInner key={id ?? '__new__'} id={id} />
 }

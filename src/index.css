@@ -144,6 +144,15 @@ body {
   background: rgba(0, 0, 0, 0.1);
 }
 
+/* ── Chat sidebar item: show menu on hover ── */
+
+.chat-sidebar-item .chat-menu-trigger {
+  opacity: 0;
+}
+.chat-sidebar-item:hover .chat-menu-trigger {
+  opacity: 1;
+}
+
 /* ── Chat input ── */
 
 .chat-input-container {
