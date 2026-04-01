@@ -12,6 +12,7 @@ import {
   TbPlayerPlay,
   TbPackages,
 } from 'react-icons/tb'
+import { VersionBar } from './VersionBar'
 
 const NAV_ITEMS = [
   { to: '/chat', icon: TbEdit, label: 'Assistant' },
@@ -327,6 +328,7 @@ export function Layout() {
 
       {/* Main content */}
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: '#f9fafb' }}>
+        <VersionBar />
         {isFullBleed ? (
           <Outlet />
         ) : (
