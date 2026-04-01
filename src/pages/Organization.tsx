@@ -249,6 +249,7 @@ function buildGraph(
         name: role.title,
         type: 'role' as const,
         capabilities: role.requiredCapabilities,
+        ...(role.isDraft ? { isDraft: true } : {}),
       },
     })
   })

@@ -53,6 +53,7 @@ export interface Workflow {
   inputSchema?: WorkflowInputField[]
   nodes: WorkflowNode[]
   edges: { from: string; to: string; label?: string }[]
+  isDraft?: boolean
 }
 
 export const WORKFLOWS: Workflow[] = [
@@ -275,5 +276,13 @@ export const WORKFLOWS: Workflow[] = [
       { from: 'n11', to: 'n12' },
       { from: 'n12', to: 'n13' },
     ],
+  },
+  {
+    id: 'w3',
+    name: 'Invoice Processing',
+    description: 'Automated invoice intake and approval workflow',
+    nodes: [],
+    edges: [],
+    isDraft: true,
   },
 ]

@@ -7,6 +7,7 @@ export interface Role {
   requiredCapabilities: string[]
   optionalCapabilities: string[]
   reportsTo?: string
+  isDraft?: boolean
 }
 
 export const ROLES: Role[] = [
@@ -59,6 +60,17 @@ export const ROLES: Role[] = [
     requiredCapabilities: ['Stakeholder Approval', 'Review Document'],
     optionalCapabilities: ['Data Analysis'],
     reportsTo: undefined,
+  },
+  {
+    id: 'r6',
+    name: 'qa-reviewer',
+    title: 'QA Reviewer',
+    team: 'Operations',
+    aiEligible: true,
+    requiredCapabilities: ['Testing', 'Bug Reporting'],
+    optionalCapabilities: [],
+    reportsTo: 'r5',
+    isDraft: true,
   },
 ]
 

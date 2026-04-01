@@ -10,7 +10,7 @@ import {
   TbEdit,
   TbMessage,
   TbPlayerPlay,
-  TbPackages,
+  TbHistory,
 } from 'react-icons/tb'
 
 const NAV_ITEMS = [
@@ -19,7 +19,7 @@ const NAV_ITEMS = [
   { to: '/processes', icon: TbRoute, label: 'Processes' },
   { to: '/runs', icon: TbPlayerPlay, label: 'Runs' },
   { to: '/admin', icon: TbBuildingCommunity, label: 'Administration' },
-  { to: '/releases', icon: TbPackages, label: 'Releases' },
+  { to: '/releases', icon: TbHistory, label: 'Versions' },
 ]
 
 const RECENT_CHATS = [

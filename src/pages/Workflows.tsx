@@ -48,7 +48,26 @@ export function Workflows() {
         header: 'Name',
         width: '1.5fr',
         render: (w) => (
-          <span style={{ fontSize: 13, fontWeight: 550, color: 'var(--color-foreground)' }}>{w.name}</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 13, fontWeight: 550, color: 'var(--color-foreground)' }}>{w.name}</span>
+            {w.isDraft && (
+              <span
+                style={{
+                  fontSize: 10,
+                  fontWeight: 700,
+                  color: 'var(--color-status-processing)',
+                  background: '#fffbeb',
+                  padding: '2px 8px',
+                  borderRadius: 9999,
+                  lineHeight: 1.4,
+                  letterSpacing: '0.02em',
+                  flexShrink: 0,
+                }}
+              >
+                Draft
+              </span>
+            )}
+          </span>
         ),
       },
       {

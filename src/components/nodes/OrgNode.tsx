@@ -9,6 +9,7 @@ interface OrgNodeData {
   type: 'person' | 'agent' | 'role' | 'task'
   avatar?: string // avatarSeed for DiceBear (agents only)
   capabilities: string[]
+  isDraft?: boolean
 }
 
 const TYPE_STYLES: Record<OrgNodeData['type'], { bg: string; initials: string }> = {
@@ -30,7 +31,7 @@ function getInitials(name: string): string {
 const showAvatar = (type: OrgNodeData['type']) => type === 'person' || type === 'agent'
 
 export function OrgNode({ data }: { data: OrgNodeData }) {
-  const { name, type, avatar, capabilities } = data
+  const { name, type, avatar, capabilities, isDraft } = data
   const styles = TYPE_STYLES[type]
   const hasAvatar = showAvatar(type)
 
@@ -45,7 +46,7 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
       style={{
         background: '#ffffff',
         borderRadius: 8,
-        border: '1px solid rgba(0,0,0,0.06)',
+        border: isDraft ? '2px solid var(--color-status-processing)' : '1px solid rgba(0,0,0,0.06)',
         boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
         width: 280,
         height: 68,
@@ -58,8 +59,28 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
         cursor: 'pointer',
         opacity: isDimmed ? 0.15 : 1,
         transition: 'opacity 0.2s ease',
+        position: 'relative',
       }}
     >
+      {isDraft && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            fontSize: 9,
+            fontWeight: 700,
+            color: 'var(--color-status-processing)',
+            background: '#fffbeb',
+            padding: '1px 6px',
+            borderRadius: 9999,
+            lineHeight: 1.5,
+            letterSpacing: '0.02em',
+          }}
+        >
+          Draft
+        </span>
+      )}
       <NodeHandles />
 
       {/* Avatar: People get initials circle, Agents get DiceBear, Roles/Tasks get nothing */}
