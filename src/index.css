@@ -76,8 +76,16 @@
   --color-accent: #f3f4f6;
   --color-accent-foreground: #111827;
   --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
   --color-input: rgba(0, 0, 0, 0.1);
   --color-ring: #1d4ed8;
+  --color-card: #ffffff;
+  --color-card-foreground: #111827;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #111827;
+
+  /* shadcn/ui base radius */
+  --radius: 0.5rem;
 
   /* Legacy aliases */
   --color-bg: #ffffff;
