@@ -11,10 +11,10 @@ import {
   TbMessage,
   TbPlayerPlay,
   TbHistory,
-  TbDots,
   TbArchive,
+  TbBell,
+  TbAlertCircle,
 } from 'react-icons/tb'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 
 const NAV_ITEMS = [
   { to: '/chat', icon: TbEdit, label: 'Assistant' },
@@ -22,7 +22,7 @@ const NAV_ITEMS = [
   { to: '/processes', icon: TbRoute, label: 'Processes' },
   { to: '/runs', icon: TbPlayerPlay, label: 'Runs' },
   { to: '/admin', icon: TbBuildingCommunity, label: 'Administration' },
-  { to: '/releases', icon: TbHistory, label: 'Versions' },
+  { to: '/releases', icon: TbHistory, label: 'Versions', badge: 'pending' as const },
 ]
 
 const RECENT_CHATS = [
@@ -39,12 +39,14 @@ function SidebarNavItem({
   label,
   collapsed,
   active,
+  badge,
 }: {
   to: string
   icon: React.ComponentType<{ size: number; strokeWidth?: number }>
   label: string
   collapsed: boolean
   active: boolean
+  badge?: string
 }) {
   return (
     <NavLink
@@ -81,7 +83,28 @@ function SidebarNavItem({
       <span style={{ display: 'flex', flexShrink: 0 }}>
         <Icon size={17} strokeWidth={active ? 1.9 : 1.7} />
       </span>
-      {!collapsed && <span className="truncate">{label}</span>}
+      {!collapsed && (
+        <>
+          <span className="truncate" style={{ flex: 1 }}>
+            {label}
+          </span>
+          {badge && (
+            <span
+              style={{
+                fontSize: 10,
+                fontWeight: 600,
+                color: 'var(--color-status-processing)',
+                background: 'rgba(245, 158, 11, 0.1)',
+                padding: '1px 6px',
+                borderRadius: 4,
+                flexShrink: 0,
+              }}
+            >
+              {badge}
+            </span>
+          )}
+        </>
+      )}
     </NavLink>
   )
 }
@@ -89,6 +112,7 @@ function SidebarNavItem({
 export function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [archivedChats, setArchivedChats] = useState<Set<string>>(new Set())
+  const [panelOpen, setPanelOpen] = useState(false)
   const location = useLocation()
 
   const visibleChats = RECENT_CHATS.filter((chat) => !archivedChats.has(chat.id))
@@ -175,6 +199,7 @@ export function Layout() {
                 label={item.label}
                 collapsed={collapsed}
                 active={location.pathname.startsWith(item.to)}
+                badge={'badge' in item ? (item.badge as string) : undefined}
               />
             ))}
           </div>
@@ -316,49 +341,43 @@ export function Layout() {
                     )}
                   </NavLink>
 
-                  {/* Three-dot menu — visible on hover only */}
+                  {/* Archive button — visible on hover only */}
                   {!collapsed && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button
-                          className="chat-menu-trigger"
-                          style={{
-                            position: 'absolute',
-                            right: 6,
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: 20,
-                            height: 20,
-                            borderRadius: 4,
-                            border: 'none',
-                            background: 'transparent',
-                            color: 'var(--color-foreground-muted)',
-                            cursor: 'pointer',
-                            opacity: 0,
-                            transition: 'opacity 0.12s ease, background 0.12s ease',
-                            padding: 0,
-                          }}
-                          onClick={(e) => e.stopPropagation()}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)'
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'transparent'
-                          }}
-                        >
-                          <TbDots size={14} />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" side="right" sideOffset={4}>
-                        <DropdownMenuItem onClick={() => handleArchiveChat(chat.id)} className="gap-2 text-xs">
-                          <TbArchive size={14} />
-                          Archive
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      className="chat-menu-trigger"
+                      title="Archive"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        handleArchiveChat(chat.id)
+                      }}
+                      style={{
+                        position: 'absolute',
+                        right: 6,
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 20,
+                        height: 20,
+                        borderRadius: 4,
+                        border: 'none',
+                        background: 'transparent',
+                        color: 'var(--color-foreground-muted)',
+                        cursor: 'pointer',
+                        transition: 'opacity 0.12s ease, background 0.12s ease',
+                        padding: 0,
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'rgba(0, 0, 0, 0.06)'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent'
+                      }}
+                    >
+                      <TbArchive size={13} />
+                    </button>
                   )}
                 </div>
               )
@@ -428,18 +447,379 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: '#f9fafb' }}>
-        {isFullBleed ? (
-          <Outlet />
-        ) : (
-          <div className="flex-1 overflow-y-auto">
-            <div className="mx-auto max-w-5xl px-12 py-10">
+      {/* Main area */}
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+        {/* Top bar */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'flex-end',
+            height: 48,
+            padding: '0 16px',
+            background: '#fff',
+            borderBottom: '1px solid rgba(0,0,0,0.06)',
+            flexShrink: 0,
+          }}
+        >
+          {/* Notifications button */}
+          <button
+            onClick={() => setPanelOpen(!panelOpen)}
+            title="Notifications"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              border: 'none',
+              background: panelOpen ? 'rgba(0,0,0,0.04)' : 'transparent',
+              cursor: 'pointer',
+              color: panelOpen ? 'var(--color-foreground)' : 'var(--color-foreground-muted)',
+              position: 'relative',
+              transition: 'all 0.12s ease',
+              marginLeft: 4,
+            }}
+            onMouseEnter={(e) => {
+              if (!panelOpen) e.currentTarget.style.background = 'rgba(0,0,0,0.03)'
+            }}
+            onMouseLeave={(e) => {
+              if (!panelOpen) e.currentTarget.style.background = 'transparent'
+            }}
+          >
+            <TbBell size={18} strokeWidth={1.8} />
+            <span
+              style={{
+                position: 'absolute',
+                top: 2,
+                right: 2,
+                minWidth: 16,
+                height: 16,
+                borderRadius: 8,
+                background: 'var(--color-status-failed)',
+                border: '2px solid #fff',
+                fontSize: 9,
+                fontWeight: 700,
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '0 3px',
+                lineHeight: 1,
+              }}
+            >
+              4
+            </span>
+          </button>
+
+          {/* Profile avatar */}
+          <div
+            style={{
+              width: 28,
+              height: 28,
+              borderRadius: '50%',
+              background: 'var(--color-foreground)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: '#fff',
+              fontSize: 10,
+              fontWeight: 700,
+              flexShrink: 0,
+              marginLeft: 12,
+              cursor: 'pointer',
+            }}
+          >
+            AZ
+          </div>
+        </div>
+
+        {/* Content + Notifications panel */}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* Page content */}
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden" style={{ background: '#f9fafb' }}>
+            {isFullBleed ? (
               <Outlet />
+            ) : (
+              <div className="flex-1 overflow-y-auto">
+                <div className="mx-auto max-w-5xl px-12 py-10">
+                  <Outlet />
+                </div>
+              </div>
+            )}
+          </main>
+
+          {/* Notifications panel */}
+          <div
+            style={{
+              width: panelOpen ? 340 : 0,
+              flexShrink: 0,
+              borderLeft: panelOpen ? '1px solid rgba(0,0,0,0.06)' : 'none',
+              background: '#fff',
+              transition: 'width 0.2s ease',
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 16px',
+                borderBottom: '1px solid rgba(0,0,0,0.06)',
+                flexShrink: 0,
+              }}
+            >
+              <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-foreground)' }}>Notifications</span>
+            </div>
+
+            <div style={{ flex: 1, overflowY: 'auto', padding: '12px' }}>
+              {/* Actions section */}
+              <div
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  color: 'var(--color-foreground-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  padding: '4px 4px 8px',
+                }}
+              >
+                Actions
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+                {/* Pending approval */}
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(29, 78, 216, 0.15)',
+                    background: 'rgba(29, 78, 216, 0.02)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <TbAlertCircle size={15} style={{ color: 'var(--color-primary)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)' }}>
+                      Approval needed
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--color-foreground-muted)', lineHeight: 1.5, margin: 0 }}>
+                    Vendor contract in Client Onboarding requires your approval.
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--color-primary)',
+                        background: 'rgba(29,78,216,0.08)',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Review
+                    </button>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: 'var(--color-foreground-muted)',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+                {/* Review required */}
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(245, 158, 11, 0.2)',
+                    background: 'rgba(245, 158, 11, 0.03)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <TbAlertCircle size={15} style={{ color: 'var(--color-status-processing)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)' }}>
+                      Review required
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--color-foreground-muted)', lineHeight: 1.5, margin: 0 }}>
+                    Q4 Summary Report drafted by Felix needs your review before sending.
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--color-status-processing)',
+                        background: 'rgba(245,158,11,0.08)',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Review
+                    </button>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: 'var(--color-foreground-muted)',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notifications section */}
+              <div
+                style={{
+                  fontSize: 10.5,
+                  fontWeight: 600,
+                  color: 'var(--color-foreground-muted)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                  padding: '4px 4px 8px',
+                }}
+              >
+                Notifications
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {/* Failed process */}
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(239, 68, 68, 0.15)',
+                    background: 'rgba(239, 68, 68, 0.02)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <TbAlertCircle size={15} style={{ color: 'var(--color-status-failed)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)' }}>
+                      Process failed
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--color-foreground-muted)', lineHeight: 1.5, margin: 0 }}>
+                    Lead Processing Pipeline failed at "Fetch CRM Data". Connection timeout.
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--color-status-failed)',
+                        background: 'rgba(239,68,68,0.08)',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      View Run
+                    </button>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: 'var(--color-foreground-muted)',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+
+                {/* Completed process */}
+                <div
+                  style={{
+                    padding: '12px 14px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(0,0,0,0.06)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                    <TbAlertCircle size={15} style={{ color: 'var(--color-status-done)', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-foreground)' }}>
+                      Process completed
+                    </span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--color-foreground-muted)', lineHeight: 1.5, margin: 0 }}>
+                    Client Onboarding completed successfully in 22 minutes.
+                  </p>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: 'var(--color-status-done)',
+                        background: 'rgba(16,185,129,0.08)',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      View Run
+                    </button>
+                    <button
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: 'var(--color-foreground-muted)',
+                        background: 'transparent',
+                        border: 'none',
+                        borderRadius: 5,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </main>
+        </div>
+      </div>
     </div>
   )
 }

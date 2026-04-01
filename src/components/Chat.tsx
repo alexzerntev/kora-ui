@@ -154,7 +154,7 @@ function ChatInner({ id }: { id?: string }) {
         {
           role: 'assistant',
           content:
-            "I've made some changes based on your request. I added a QA Reviewer role, an Automated Testing task, updated the Client Onboarding process, and removed the Legacy Bot agent. You can review the changes below and add them to unreleased when ready.",
+            "I've made some changes based on your request. I added a QA Reviewer role, an Automated Testing task, updated the Client Onboarding process, and removed the Legacy Bot agent. You can review the changes below and add them to next release when ready.",
         },
       ])
       setPendingChanges(MOCK_CHANGES)
@@ -168,7 +168,7 @@ function ChatInner({ id }: { id?: string }) {
     }
   }
 
-  const handleAddToUnreleased = () => {
+  const handleAddToNextRelease = () => {
     setPendingChanges([])
     setChangesExpanded(false)
     setMessages((prev) => [
@@ -176,7 +176,7 @@ function ChatInner({ id }: { id?: string }) {
       {
         role: 'assistant',
         content:
-          'Changes have been added to unreleased. You can review them in the Versions page and release when ready.',
+          'Changes have been added to next release. You can review them in the Versions page and release when ready.',
       },
     ])
   }
@@ -353,7 +353,7 @@ function ChatInner({ id }: { id?: string }) {
               <button
                 onClick={(e) => {
                   e.stopPropagation()
-                  handleAddToUnreleased()
+                  handleAddToNextRelease()
                 }}
                 style={{
                   display: 'flex',
@@ -378,7 +378,7 @@ function ChatInner({ id }: { id?: string }) {
                 }}
               >
                 <TbPlus size={13} strokeWidth={2.5} />
-                Add to unreleased
+                Add to next release
               </button>
             </div>
 

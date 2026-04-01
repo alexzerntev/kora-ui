@@ -78,7 +78,7 @@ export function OrgNode({ data }: { data: OrgNodeData }) {
             letterSpacing: '0.02em',
           }}
         >
-          Draft
+          Next Release
         </span>
       )}
       <NodeHandles />

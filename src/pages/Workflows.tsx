@@ -64,7 +64,7 @@ export function Workflows() {
                   flexShrink: 0,
                 }}
               >
-                Draft
+                Next Release
               </span>
             )}
           </span>

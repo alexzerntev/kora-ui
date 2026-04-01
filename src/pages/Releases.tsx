@@ -109,7 +109,7 @@ export function Releases() {
     <div style={{ maxWidth: 700 }}>
       <header className="page-header">
         <h1>Versions</h1>
-        <p>Your live version, unreleased changes, and version history</p>
+        <p>Your live version, next release, and version history</p>
       </header>
 
       {/* Running version */}
@@ -151,8 +151,8 @@ export function Releases() {
         </div>
       )}
 
-      {/* Unreleased (draft) */}
-      <SectionLabel>Unreleased</SectionLabel>
+      {/* Next Release (draft) */}
+      <SectionLabel>Next Release</SectionLabel>
       {draftsLoading ? (
         <div
           style={{
@@ -177,7 +177,7 @@ export function Releases() {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
             <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-foreground)' }}>{draft.chatTitle}</span>
-            <StatusBadge status="unreleased" color="var(--color-status-processing)" backgroundColor="#fffbeb" />
+            <StatusBadge status="next release" color="var(--color-status-processing)" backgroundColor="#fffbeb" />
             <div style={{ flex: 1 }} />
             <span style={{ fontSize: 12, color: 'var(--color-foreground-muted)' }}>{draft.createdBy}</span>
           </div>
@@ -187,7 +187,7 @@ export function Releases() {
           <div style={{ display: 'flex', gap: 8 }}>
             <Button size="sm" onClick={() => provider.publishDraft(draft.id)}>
               <TbRocket size={14} />
-              Go Live
+              Release
             </Button>
             <Button size="sm" variant="destructive" onClick={() => provider.discardDraft(draft.id)}>
               <TbTrash size={14} />
@@ -207,7 +207,7 @@ export function Releases() {
             marginBottom: 28,
           }}
         >
-          No unreleased changes.
+          No next release.
         </div>
       )}
 
