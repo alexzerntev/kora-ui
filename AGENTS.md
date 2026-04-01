@@ -163,6 +163,12 @@ src/
 - Administration → `/admin`
 - Settings → `/settings`
 
+### Component Selection Rule
+When a UI component is needed (button, dialog, table, dropdown, tooltip, etc.):
+1. **First check if shadcn/ui has it** — run `npx shadcn@latest add <component>` to install. shadcn components live in `src/components/ui/`.
+2. **Only if shadcn doesn't have it**, create a custom component in `src/components/shared/`.
+3. Never build custom versions of components that shadcn already provides.
+
 ### Reusable Shared Components
 When building new pages, use these shared components:
 - **DataTable** — for any tabular data (typed columns, row click, hover)
