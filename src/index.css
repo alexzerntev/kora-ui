@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import 'tw-animate-css';
 
 /* ── Design System: Codex-Minimal ── */
 /* Inspired by Codex (OpenAI) light theme — barely-there UI, maximum content focus */
@@ -9,6 +10,7 @@
   --font-heading: 'DM Sans', system-ui, -apple-system, sans-serif;
 
   /* Base palette */
+  --color-body: #fafaf9;
   --color-background: #ffffff;
   --color-surface: #ffffff;
   --color-surface-hover: #f9fafb;
@@ -102,7 +104,7 @@
 
 body {
   font-family: var(--font-sans);
-  background: #fafaf9;
+  background: var(--color-body);
   color: var(--color-foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
